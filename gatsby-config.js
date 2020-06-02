@@ -1,16 +1,16 @@
 module.exports = {
   siteMetadata: {
-    title: 'Gatsby Theme Carbon',
-    description: 'A Gatsby theme for the carbon design system',
-    keywords: 'gatsby,theme,carbon',
+    title: 'IBM DataPower Operator Documentation',
+    description: 'Official documentation for IBM DataPower Operator',
+    keywords: 'ibm,datapower,gateway,integration,operator',
   },
-  pathPrefix: `/gtc`,
+  pathPrefix: `/datapower-operator-doc`,
   plugins: [
     {
       resolve: 'gatsby-plugin-manifest',
       options: {
-        name: 'Carbon Design Gatsby Theme',
-        short_name: 'Gatsby Theme Carbon',
+        name: 'IBM DataPower Operator Documentation',
+        short_name: 'IBM DataPower Operator Documentation',
         start_url: '/',
         background_color: '#ffffff',
         theme_color: '#0062ff',
@@ -21,9 +21,8 @@ module.exports = {
       resolve: 'gatsby-theme-carbon',
       options: {
         repository: {
-          baseUrl:
-            'https://github.com/carbon-design-system/gatsby-theme-carbon',
-          subDirectory: '/packages/example',
+          baseUrl: 'https://github.com/IBM/datapower-operator-doc',
+          subDirectory: '',
         },
       },
     },
