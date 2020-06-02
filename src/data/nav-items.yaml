@@ -1,7 +1,19 @@
 - title: Getting started
   pages:
     - path: /getting-started
+- title: APIs
+  pages:
+    - title: DataPowerService
+      path: /apis/datapowerservice/spec
+- title: Features
+  pages:
+    - title: Configuration Management
+      path: /features/config-mgmt
+    - title: Operand Upgrades
+      path: /features/operand-upgrade
 - title: Guides
   pages:
     - title: Migrating from v2018 to v10
       path: /guides/v2018-v10-migration
+    - title: Domain Configuration
+      path: /guides/domain-configuration

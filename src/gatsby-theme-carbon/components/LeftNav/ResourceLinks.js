@@ -10,6 +10,10 @@ const links = [
     title: 'Github',
     href: 'https://github.com/IBM/datapower-operator-doc',
   },
+  {
+    title: 'Dockerhub',
+    href: 'https://hub.docker.com/r/ibmcom/datapower-operator',
+  },
 ];
 
 // shouldOpenNewTabs: true if outbound links should open in a new tab
