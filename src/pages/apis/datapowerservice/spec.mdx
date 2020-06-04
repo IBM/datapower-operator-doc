@@ -467,7 +467,7 @@ Optional:
 
 This optional property sets the image for the monitor Deployment.
 
-Defaults to `ibmcom/datapower-monitor:latest`.
+Defaults to `docker.io/ibmcom/datapower-monitor:latest`.
 
 #### `lifecycleDebounceMs`
 
@@ -527,7 +527,7 @@ metadata:
   name: example-dpservice
 spec:
   datapowerMonitor:
-    image: ibmcom/datapower-monitor:latest
+    image: docker.io/ibmcom/datapower-monitor:latest
     lifecycleDebounceMs: 10000
     peeringRecoveryCheckIntervalMs: 1000
     monitorGatewayPeering: false
@@ -712,8 +712,8 @@ spec:
     imagePullPolicy: "IfNotPresent"
     odTracingRegistrationHostname: icp4i-od.tracing.svc
     odTracingDataHostname: od-store-od.tracing.svc
-    imageAgent: ibmcom/icp4i_od_agent:1.0.0-amd64
-    imageCollector: ibmcom/icp4i_od_collector:1.0.0-amd64
+    imageAgent: docker.io/ibmcom/icp4i_od_agent:1.0.0-amd64
+    imageCollector: docker.io/ibmcom/icp4i_od_collector:1.0.0-amd64
     collector:
       livenessProbe:
         initialDelaySeconds: 8
