@@ -3,4 +3,59 @@ title: Operand Upgrades
 description: Manual and automatic upgrade of IBM DataPower operands
 ---
 
-stub
+<PageDescription>
+
+The DataPower Operator supports both manual and automatic upgrades of the IBM DataPower Pods it manages via the StatefulSet.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Upgrade Strategy</AnchorLink>
+  <AnchorLink>Specifying a Version</AnchorLink>
+  <AnchorLink>Manual Upgrades</AnchorLink>
+  <AnchorLink>Automatic Upgrades</AnchorLink>
+  <AnchorLink>Checking the Reconciled Version</AnchorLink>
+</AnchorLinks>
+
+## Upgrade Strategy
+
+The DataPower pods are managed by a StatefulSet, which is managed by the DataPower Operator. When any change is made to the `DataPowerService` Custom Resource (CR), the StatefulSet performs a rolling update to serialize the change across the pods. This same strategy is used to perform an upgrade, as the specified version of the DataPower operand is simply a property in the `DataPowerService` spec.
+
+## Specifying a Version
+
+One of the required fields of the `DataPowerService` spec is [version](/apis/datapowerservice/spec#version). This property will determine which version the operator reconciles, unless a custom image is provided via the [image](/apis/datapowerservice/spec#image) property.
+
+If a custom `image` is provided, the exact `version` must also be specified to inform the operator of what base image version is being used.
+
+### Manual Upgrades
+
+To manually schedule the upgrade, an existing `DataPowerService` CR can be modified to specify a new `version`.
+
+For example, let's assume `10.0.0.0` was the currently specified `version`, and `10.0.0.1` was available. To apply the CR change:
+
+```
+oc patch dp <name> -p '{"spec":{"version":"10.0.0.1"}}' --type=merge
+```
+
+This change could also be applied via `oc edit` or by `oc apply` with the appropriate YAML.
+
+### Automatic Upgrades
+
+The DataPower Operator supports automatically upgrading the DataPower pods when new versions are available. To subscribe to an upgrade channel, specify an available channel name as the `version` in the `DataPowerService` CR spec. For example:
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example
+spec:
+  version: 10.0.0
+```
+
+In the above example, the DataPower Operator will automatically apply the latest version when the CR is created. When a new version becomes available within that channel (i.e. `10.0.0.x`), the operator will automatically reconcile the new version, using the same Upgrade Strategy as above (rolling update).
+
+## Checking the Reconciled Version
+
+The reconciled version of the `DataPowerService` will always represent the current version being used by the StatefulSet. If a channel is supplied in the `version` field, the reconciled version will reflect the chosen latest version within that channel. If a custom `image` is provided, the reconciled version will reflect the version specified in the `version` property, which is expected to match that of the `image`.
+
+The reconciled version is available in the `DataPowerService` status at `status.versions.reconciled`. More on this topic [here](/apis/datapowerservice/status#versions).
