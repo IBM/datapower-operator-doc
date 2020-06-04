@@ -4,4 +4,773 @@ tabs: ['Spec', 'Status']
 description: DataPowerService Spec definition
 ---
 
-stub
+<PageDescription>
+
+The `DataPowerService` is a Custom Resource Definition used to deploy and manage a DataPower StatefulSet.
+
+</PageDescription>
+
+# Properties
+
+|Property             |Description                                                      |Required|Default      |
+|---------------------|-----------------------------------------------------------------|--------|-------------|
+|`license`            |License acceptance and use                                       |Yes     |None         |
+|`version`            |DataPower firmware version                                       |Yes     |None         |
+|`replicas`           |Desired number of Pods in the Statefulset                        |Yes     |None         |
+|`image`              |Custom DataPower image                                           |No      |None         |
+|`imagePullSecrets`   |Image pull secrets                                               |No      |None         |
+|`users`              |List of `Users` to associate with DataPower                      |No      |See doc below|
+|`domains`            |List of `DataPowerDomains` to associate with Service             |No      |None         |
+|`env`                |Environment variables                                            |No      |None         |
+|`initCmds`           |Commands to run during user-specified initialization stage       |No      |None         |
+|`extraExe`           |List of ConfigMap names to mount containing extra executables    |No      |None         |
+|`debug`              |Enable debug logging on init scripts                             |No      |`false`      |
+|`resources`          |Resource specifications for StatefulSet                          |No      |See doc below|
+|`livenessProbe`      |Custom LivenessProbe                                             |No      |See doc below|
+|`readinessProbe`     |Custom ReadinessProbe                                            |No      |See doc below|
+|`dataPowerMonitor`   |DataPower Monitor configuration                                  |No      |See doc below|
+|`affinity`           |Custom Kubernetes `Affinity` configuration                       |No      |See doc below|
+|`storage`            |Persistent volume requests                                       |No      |See doc below|
+|`podManagementPolicy`|Control how pods are deployed                                    |No      |`Parallel`   |
+|`serviceAccountName` |Name of desired service account                                  |No      |None         |
+|`odTracing`          |OpenTracing Agent and Collector container configurations         |No      |See doc below|
+|`annotations`        |Custom annotations to apply to Pods                              |No      |None         |
+|`labels`             |Custom labels to apply to Pods                                   |No      |None         |
+
+<AnchorLinks small>
+  <AnchorLink>license</AnchorLink>
+  <AnchorLink>version</AnchorLink>
+  <AnchorLink>replicas</AnchorLink>
+  <AnchorLink>image</AnchorLink>
+  <AnchorLink>imagePullSecrets</AnchorLink>
+  <AnchorLink>users</AnchorLink>
+  <AnchorLink>domains</AnchorLink>
+  <AnchorLink>env</AnchorLink>
+  <AnchorLink>initCmds</AnchorLink>
+  <AnchorLink>extraExe</AnchorLink>
+  <AnchorLink>debug</AnchorLink>
+  <AnchorLink>resources</AnchorLink>
+  <AnchorLink>livenessProbe</AnchorLink>
+  <AnchorLink>readinessProbe</AnchorLink>
+  <AnchorLink>dataPowerMonitor</AnchorLink>
+  <AnchorLink>affinity</AnchorLink>
+  <AnchorLink>storage</AnchorLink>
+  <AnchorLink>podManagementPolicy</AnchorLink>
+  <AnchorLink>serviceAccountName</AnchorLink>
+  <AnchorLink>odTracing</AnchorLink>
+  <AnchorLink>annotations</AnchorLink>
+  <AnchorLink>labels</AnchorLink>
+</AnchorLinks>
+
+## `license`
+
+### Description
+
+The `License` property contains two required fields:
+
+- `accept`: must be boolean `true` for the DataPower pod(s) to start successfully. This property directly sets the DataPower `DATAPOWER_LICENSE_ACCEPT` environment variable in pods, which acknowledges the license acceptance.
+- `use`: the license use. Can be one of the following values:
+  - `production`
+  - `nonproduction`
+  - `developers`
+  - `developers-limited`
+
+The `license.use` is used in tandem with the `version` property to determine what DataPower firmware image to pull and use in the deployment.
+
+To view the full license terms, you can:
+
+```
+docker run --rm <image> --show-license
+```
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  license:
+    accept: true
+    use: production
+  ...
+```
+
+## `version`
+
+### Description
+
+The `version` property specifies the desired DataPower firmware version to reconcile. This value must match an available version or channel the CRD and operator provide. Subscribing to a channel, for example `10.0.0`, will allow for automatic updates to future versions on that LTS release stream (`10.0.0.x`). If the `DataPowerService` instance is created with a channel specified in `version`, the latest available version in that channel will be reconciled.
+
+You are also able to lock in a specific version by specifying the full version string, for example `10.0.0.0`.
+
+You can view the reconciled and available versions and channels on the `DataPowerService` instance's status, once created.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  version: 10.0.0
+```
+
+## `replicas`
+
+### Description
+
+The `replicas` property is an integer that directly sets the `replicas` field on the `StatefulSet` of DataPower pods. This property sets the number of DataPower pods you wish to deploy.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  replicas: 3
+  ...
+```
+
+## `image`
+
+### Description
+
+The `image` property allows for a custom built DataPower Docker image to be used in the deployment. This field is optional, and will override the image that would be specified by `version` and `license.use`. The value of this property, if provided, will be directly used in the DataPower Pod specs.
+
+<InlineNotification>
+
+**Note:** If this field is set, you are responsible for setting the `version` property to the appropriate matching version that your custom image is based on. For example, if you are using a custom `image` based on `10.0.0.0`, then set `version` to `10.0.0.0`.
+
+</InlineNotification>
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  image: my.registry.com/my-custom-datapower:v10
+  version: 10.0.0.0
+  ...
+```
+
+## `imagePullSecrets`
+
+### Description
+
+The `imagePullSecrets` property specifies the name of Kubernetes `Secret` objects in the cluster which will provide the Docker registry credentials to pull any images needed during reconciliation and deployment.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  imagePullSecrets:
+  - datapower-cred-one
+  - datapower-cred-two
+  ...
+```
+
+## `users`
+
+### Description
+
+The `users` property defines the user accounts to be created. The `name` field will be the name of the account and the `passwordSecret` field is the name of the secret that contains the credentials for the user account. The `access-level` and `group` property define the access-level, either `privileged` or `group-defined`, and the group, if access-level is `group-defined`. If using groups, it is expected that the configuration provided for the default domain would define the user group in RBM settings. This property does not create the group, it just creates a user asigned to the specified group.
+
+An admin account must be defined. By default, an admin account is defined using the secret name `admin-credentials`. You can either create a secret with that name containing the credentials for the admin account, or use a different secret name by changing the `passwordSecret` field for the admin user in the CR.
+
+The following are values in the secret which can be used to define the user's credentials:
+
+- `password-hashed`: The hashed value (see Linux `man 3 crypt` for format) of the user's password. Required if `password` is not defined.
+- `password`: The user's password. Required if `password-hashed` is not defined; ignored if `password-hashed` is defined.
+- `salt`: The salt value used when hashing `password` (see `man 3 crypt`). Optional; ignored when `password-hashed` is defined. (Default: 12345678)
+- `method`: The name of the hashing algorithm used to hash `password`. Valid options: md5, sha256. Optional; ignored when `password-hashed` is defined. (Default: md5)
+
+The following examples create Secrets with different values, but result in an user with the same credentials (and the same password hash):
+
+-  `kubectl create secret generic userName-credentials --from-literal=password=helloworld --from-literal=salt=12345678 --from-literal=method=md5`
+-  `kubectl create secret generic userName-credentials --from-literal=password=helloworld`
+-  `kubectl create secret generic userName-credentials --from-literal=password-hashed='$1$12345678$8.nskQfP4gQ8tk5xw6Wa8/'`
+
+These two examples also result in Secrets with different values but identical user credentials
+
+-  `kubectl create secret generic userName-credentials --from-literal=password=hunter2 --from-literal=salt=NaCl --from-literal=method=sha256`
+-  `kubectl create secret generic userName-credentials --from-literal=password-hashed='$5$NaCl$aOrRVimQNvZ2ZLjnAyMvT3WgaUEXoWgwkgyBrhwIg04'`
+
+    Notice that, when setting `password-hashed`, the value must be surrounded by single-quotes
+
+For more information, read the Kubernetes documentation on [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets).
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  users:
+  - name: admin
+    passwordSecret: admin-credentials
+    access-level: privileged
+  - name: user1
+    passwordSecret: user1-credentials
+    accessLevel: group-defined
+    group: group1
+  - name: user2
+    passwordSecret: user2-credentials
+    accessLevel: group-defined
+    group: group2
+  ...
+```
+
+## `domains`
+
+### Description
+
+The `domains` property allows for user-provided domain configuration(s) to be injected into the DataPower pods at runtime, prior to the DataPower process starting.
+
+For an in-depth look at utilizing this property, please see [Domain Configuration](/guides/domain-configuration).
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  domains:
+  - name: "default"
+    certs:
+    - certType: "usrcerts"
+      secret: "default-cert"
+    - certType: "sharedcerts"
+      secret: "shared-cert"
+    dpApp:
+      config:
+      - "default-config"
+      local:
+      - "default-local"
+  - name: "example"
+    certs:
+    - certType: "usrcerts"
+      secret: "example-cert"
+      subPath: "/example/path"
+    dpApp:
+      config:
+      - "example-config-pt-0"
+      - "example-config-pt-1"
+      - "example-config-pt-2"
+      local:
+      - "example-local-pt-0"
+      - "example-local-pt-1"
+      - "example-local-pt-2"
+  ...
+```
+
+## `env`
+
+### Description
+
+The `env` property allows you to set custom environment variables that will be set and used within the DataPower containers in the StatefulSet. This property exposes the Kubernetes API for declaring environment variables in the container, and thus follows the same schema. For more information, please see the Kubernetes [documentation](https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/).
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  env:
+  - name: DATAPOWER_LOG_LEVEL
+    value: "7"
+  ...
+```
+
+## `initCmds`
+
+### Description
+
+The `initCmds` property is an array of strings that represent initialization commands that you wish to run prior to the DataPower process starting. These commands will be run after the DataPower Operator internal initialization scripts, but before the DataPower `start.sh` script.
+
+This property can be used in conjunction with the `extraExe` property to run custom initialization scripts that you've added to the DataPower pod(s), or any custom sidecar processes you wish to run in the DataPower containers.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  initCmds:
+  - /usr/local/extra/test.sh
+  - ls -al /opt/ibm/datapower/drouter/config
+  ...
+```
+
+## `extraExe`
+
+### Description
+
+The `extraExe` property is an array of strings that represent name(s) of ConfigMaps in the cluster. When the DataPower pod(s) are created, the ConfigMaps specified by `extraExe` are mounted with `r+x` permissions at `/usr/local/extra`.
+
+This property can be used in conjunction with the `initCmds` property to run custom initialization scripts that you've added to the DataPower pod(s), or any custom sidecar processes you wish to run in the DataPower containers.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  extraExe:
+  - config-map-one
+  - config-map-two
+  - config-map-three
+  ...
+```
+
+## `debug`
+
+### Description
+
+The `debug` property is a user toggleable debugging utility. It sets an environment variable `DPOPERATOR_DEBUG` in each pod which makes all DataPower provided init scripts output debug level information. If not set, it will default to `false`.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  debug: true
+```
+
+## `resources`
+
+### Description
+
+The `resources` property specifies the desired resources to allocate to the DataPower containers in the statefulset. It is worth noting that you can only request CPU, there is not a limit field, as the DataPower Operator will set:
+
+```
+DATAPOWER_WORKER_THREADS == container.limits.cpu == container.requests.cpu
+```
+
+Thus, when you define the CPU request, all of the above three values will get that value in the statefulset. This ensures best practices are followed in the DataPower runtime statefulset.
+
+You are still able to set both requests and limits for memory. In both cases (`cpu` and `memory`) the values must follow Kubernetes formatting constraints.
+
+If this field is not provided, or parts of the `resources` object are left unset, the example below shows the default value(s) that will be used.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  resources:
+    requests:
+      cpu: 4
+      memory: 4Gi
+    limits:
+      memory: 8Gi
+  ...
+```
+
+## `livenessProbe`
+
+### Description
+
+The `livenessProbe` property allows you to set a custom Livensss Probe for the DataPower container(s) in the StatefulSet. The value of this property must be a well formed Kubernetes `Probe` type. If not specified, the following default will be used:
+
+```yaml
+livenessProbe:
+  failureThreshold: 3
+  httpGet:
+    path: /
+    port: 7879
+    scheme: HTTP
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  successThreshold: 1
+  timeoutSeconds: 5
+```
+
+This default `livenessProbe` leverages the built-in DataPower health-check sidecar process.
+
+### Example
+
+In addition to the above example, it's worth reviewing Kubernetes documentation on [Configure Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) for additional details on what configuration capabilities are available for this field.
+
+## `readinessProbe`
+
+### Description
+
+The `readinessProbe` property allows you to set a custom Readiness Probe for the DataPower container(s) in the statefulset. The value of this property must be a well formed Kubernetes `Probe` type. If not specified, the following default will be used:
+
+```yaml
+readinessProbe:
+  failureThreshold: 3
+  httpGet:
+    path: /
+    port: 7879
+    scheme: HTTP
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  successThreshold: 1
+  timeoutSeconds: 5
+```
+
+This default `readinessProbe` leverages the built-in DataPower health-check sidecar process.
+
+### Example
+
+In addition to the above example, it's worth reviewing Kubernetes documentation on [Configure Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) for additional details on what configuration capabilities are available for this field.
+
+## `dataPowerMonitor`
+
+### Description
+
+The DataPower Monitor spec defines the configuration for the DataPower Monitor Deployment. The DataPower Monitor serves a vital purpose in logging the lifecycle events of DataPower Pods and, optionally, clearing out stale peers in APIC gateway deployments.
+
+Optional:
+
+- `image`
+- `lifecycleDebounceMs`
+- `peeringRecoveryCheckIntervalMs`
+- `monitorGatewayPeering`
+- `livenessProbePort`
+- `resources`
+- `xmlMgmtPort`
+- `env`
+
+### Parameters
+
+#### `image`
+
+This optional property sets the image for the monitor Deployment.
+
+Defaults to `ibmcom/datapower-monitor:latest`.
+
+#### `lifecycleDebounceMs`
+
+This optional property sets the minimum time between logged lifecycle events.
+
+Defaults to `10000`.
+
+#### `peeringRecoveryCheckIntervalMs`
+
+This optional property sets the interval in which the Monitor will scan for stale peers.
+
+Defaults to `1000`.
+
+#### `monitorGatewayPeering`
+
+This optional property turns the peering management feature on and off.
+
+Defaults to `false`.
+
+#### `livenessProbePort`
+
+This optional property sets the port for the liveness probe.
+
+Defaults to `8080`.
+
+#### `resources`
+
+This optional property configures the resources for the DataPower Monitor Pod.
+
+Defaults to:
+
+```yaml
+requests:
+  cpu: 250m
+  memory: 256Mi
+limits:
+  cpu: 500m
+  memory: 1Gi
+```
+
+#### `xmlMgmtPort`
+
+This optional property configures the port used to connect to the DataPower XML Management Interface. This value should match the port the `xml-mgmt` object in the DataPower default domain is configured to listen on.
+
+Defaults to `5550`.
+
+### `env`
+
+This optional property allows you to set custom environment variables that will be set and used within the DataPower Monitor container. This property exposes the Kubernetes API for declaring environment variables in the container, and thus follows the same schema. For more information, please see the Kubernetes [documentation](https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/).
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  datapowerMonitor:
+    image: ibmcom/datapower-monitor:latest
+    lifecycleDebounceMs: 10000
+    peeringRecoveryCheckIntervalMs: 1000
+    monitorGatewayPeering: false
+    livenessProbePort: 8080
+    xmlMgmtPort: 5550
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    env:
+    - name: K8S_DPM_DEBUG
+      value: "*"
+```
+
+## `Affinity`
+
+### Description
+
+`Affinity` is an interface for specifying custom affinity settings. This field is a literal `Affinity` object from the Kubernetes library, so it is fully featured and applies directly to the pods. When no Affinity is specified, the defaults shown in the example below are used.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: "beta.kubernetes.io/arch"
+              operator: In
+              values: ["amd64"]
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          topologyKey: "kubernetes.io/hostname"
+          labelSelector:
+            matchLabels:
+              app: datapower
+              release: example-dpservice
+```
+
+## `storage`
+
+### Description
+
+The `Storage` property is a list of storage definitions. Storage definitions fall into two categories: ephermeral and persistent. The following fields can be modified:
+
+- `type`
+- `path`
+- `size`
+- `class`
+- `volumeMode`
+- `selector`
+- `deleteClaim`
+
+### `type`
+
+`type` defines the kind of storage volume that will be created. There are two valid options: `ephemeral` and `persistent`. Ephemeral storage takes the form of EmptyDir volumes mounted on `path`. Persistent storage takes the form of Persistent Volume Claims.
+
+#### `path`
+
+`path` is simply the path internal to the container to persist. The `path` also informs the names of the volume resources to ensure uniqueness.
+
+This field applies to both ephemeral and persistent types.
+
+#### `size`
+
+`size` is the size of the persisted volume. The expected format is some form of `#Gi`. For more information on resource definitions, [see Resources doc](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/scheduling/resources.md).
+
+This field applies to both ephermeral and persistent types.
+
+#### `class`
+
+`class` is a direct pass through to the `storageClassName` field for the Persistent Volume Claim. It determines which class to use for the volume. [StorageClass doc](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#class-1)
+
+This field applies only to the persistent type.
+
+#### `volumeMode`
+
+`volumeMode` is a switch between `Filesystem` and `Block` volume types. Our default type is `Filesystem`. [VolumeMode doc](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#volume-modes)
+
+This field applies only to the persistent type.
+
+#### `selector`
+
+`selector` is a set of label selectors to refine the search for a Persistent Volume to bind.
+
+This field applies only to the persistent type.
+
+#### `deleteClaim`
+
+`deleteClaim` is a boolean value to specify whether a persistent volume claim should be deleted or retained.
+
+This field applies only to the persistent type.
+
+### Example
+
+```yaml
+storage:
+- type: persistent
+  path: /opt/ibm/datapower/drouter/config
+  size: 10Gi
+  class: velox-block
+  volumeMode: Block
+  selector:
+    matchLabels:
+      example.label: some.value
+- type: ephemeral
+  path: /opt/ibm/datapower/drouter/temporary
+  size: 2Gi
+```
+
+## `podManagementPolicy`
+
+### Description
+
+The `podManagementPolicy` property maps directly to the StatefulSet PodManagementPolicy. There are two valid options: `Parallel` and `OrderedReady`. `Parallel`, the DataPowerService default, will make pods initially install in parallel to decrease time-to-ready. `OrderedReady` will make pods install sequentially, each waiting for the previous to become Ready before begining to install. For more information, read the Kubernetes documentation on [PodManagementPolicy](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies).
+
+### Example
+
+```yaml
+spec:
+  podManagementPolicy: OrderedReady
+```
+
+## `serviceAccountName`
+
+### Description
+
+The `serviceAccountName` is a pass-through field for a Pod's ServiceAccountName. This field should be a string that is the name of the Service Account that is to be used by the deployed DataPower Pods.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  serviceAccountName: "example-serviceaccount"
+```
+
+## `odTracing`
+
+### Description
+
+The `odTracing` property contains the necessary information to enable OpenTracing and run an agent and collector containers. If `odTracing` is not defined, OpenTracing will be disabled by default. All of the required properties must be provided. It is recomended to only provide values for the agent and collector probes if instructed by IBM support. The agent and collector probes will default to recomended values shown in the example below when not included. If including custom probe settings, only properties that need to be changed have to be included. When going through the OpenTracing registration process, the secret that stores credentials should be named `icp4i-od-store-cred`.
+
+Required:
+
+- `enabled`
+- `imagePullPolicy`
+- `odTracingRegistrationHostname`
+- `odTracingDataHostname`
+- `imageAgent`
+- `imageCollector`
+
+Optional:
+
+- `agent`
+- `collector`
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  odTracing:
+    enabled: true
+    imagePullPolicy: "IfNotPresent"
+    odTracingRegistrationHostname: icp4i-od.tracing.svc
+    odTracingDataHostname: od-store-od.tracing.svc
+    imageAgent: ibmcom/icp4i_od_agent:1.0.0-amd64
+    imageCollector: ibmcom/icp4i_od_collector:1.0.0-amd64
+    collector:
+      livenessProbe:
+        initialDelaySeconds: 8
+        periodSeconds: 10
+        timeoutSeconds: 2
+        failureThreshold: 3
+      readinessProbe:
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        timeoutSeconds: 2
+        failureThreshold: 3
+    agent:
+      livenessProbe:
+        initialDelaySeconds: 8
+        periodSeconds: 10
+        timeoutSeconds: 2
+       failureThreshold: 3
+      readinessProbe:
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        timeoutSeconds: 2
+        failureThreshold: 3
+  ...
+```
+
+## `annotations`
+
+### Description
+
+The `annotations` field serves as a pass-through for Pod annotations. Users can add any annotation to this field and have it apply to the Pod. The annotations here overwrite the default annotations if provided. For example, if the annotation `prometheus.io/scrape` was provided, it would overwrite our default value of `"true"`.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  annotations:
+    prometheus.io/scrape: "false"
+```
+
+## `labels`
+
+### Description
+
+The `labels` field serves as a pass-through for Pod labels. Users can add any label to this field and have it apply to the Pod. The labels here overwrite the default labels if provided. For example, if the label `app.kubernetes.io/instance` was provided, it would overwrite our default value of `<cr.namespace>-<cr.name>`.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta1
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  labels:
+    app.kubernetes.io/instance: "my-service"
+```
