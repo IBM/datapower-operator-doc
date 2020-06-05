@@ -17,3 +17,13 @@
       path: /guides/v2018-v10-migration
     - title: Domain Configuration
       path: /guides/domain-configuration
+- title: Troubleshooting
+  pages:
+    - title: Logging
+      path: /troubleshooting/logging
+    - title: DataPowerService Status
+      path: /troubleshooting/check-status
+    - title: Stale Webhooks
+      path: /troubleshooting/stale-webhooks
+    - title: Init Scripts
+      path: /troubleshooting/init-scripts

@@ -1,0 +1,63 @@
+---
+title: Logging
+description: Troubleshooting guide related to logging
+---
+
+<PageDescription>
+
+The logging level for the DataPower Operator can be adjusted to aid in troubleshooting issues.
+
+</PageDescription>
+
+
+## Log level
+
+You can adjust the log level of the DataPower Operator Pod. The supported log levels are as follows:
+
+- `error`
+- `info`
+- `debug`
+- integer > 0
+
+Notes:
+
+  - Setting the log level to 1 is the equivalent of using `debug`
+  - Setting the log level to an integer > 1 will increase the log level past `debug` for increased verbosity of operator code, as well as library code.
+  - Setting the log level to an integer >= 4 will set the log level for Kubernetes API logging.
+
+The mechanism by which you change the logging level may depend on how you installed the operator.
+
+### Set via Helm chart
+
+<!-- TODO: add link to Helm chart once published -->
+Our Helm chart offers the `operator.logLevel` property as a method to change the log level.
+
+### Set via Deployment
+
+The DataPower Operator's `Deployment` can also be modified in the cluster directly. In the container spec you will see something like this:
+
+```yaml
+args:
+  - "--zap-encoder=json"
+  - "--zap-level=info"
+  - "--zap-time-encoding=iso8601"
+```
+
+These values can be modified following the [default `zap` logger](https://sdk.operatorframework.io/docs/golang/references/logging/#default-zap-logger) documentation.
+
+## Retrieving logs
+
+Logs can be retrieved from the DataPower Operator pod using `kubectl logs`, `oc logs`, or the OpenShift console if deployed on OpenShift.
+
+Some examples, where `datapower-operator-777fccc85-68gs6` is the Pod name:
+
+```bash
+# dump all logs to file
+oc logs datapower-operator-777fccc85-68gs6 > datapower-operator-logs.txt
+
+# stream logs
+oc logs -f datapower-operator-777fccc85-68gs6
+
+# dump logs from previous container (i.e. after a restart)
+oc logs --previous datapower-operator-777fccc85-68gs6
+```

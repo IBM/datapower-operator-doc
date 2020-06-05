@@ -348,7 +348,13 @@ spec:
 
 ### Description
 
-The `debug` property is a user toggleable debugging utility. It sets an environment variable `DPOPERATOR_DEBUG` in each pod which makes all DataPower provided init scripts output debug level information. If not set, it will default to `false`.
+The `debug` property is a user toggleable debugging utility. If not set, it will default to `false`. For more information on the use of this property, see the [Init Scripts](/troubleshooting/init-scripts) troubleshooting guide.
+
+<InlineNotification kind="warning">
+
+**Warning:** The `debug` property should only be set `true` if instructed by IBM Support.
+
+</InlineNotification>
 
 ### Example
 
