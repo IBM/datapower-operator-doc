@@ -1,0 +1,75 @@
+---
+title: Stale Webhooks
+description: Troubleshooting guide related to stale webhook configurations
+---
+
+<PageDescription>
+
+The DataPower Operator implements and uses [Kubernetes Admission Controllers](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/) for validating and defaulting `DataPowerService` requests.
+
+</PageDescription>
+
+## Background
+
+During the DataPower Operator pod's boot sequence, it will attempt to fetch and/or create several Kubernetes resources for the validating and defaulting webhooks. These resources include:
+
+- `Secret` containing TLS key/cert for webhook API
+- `Service` to expose the webhook API
+- `MutatingWebhookConfiguration` for the defaulting webhook
+- `ValidatingWebhookConfiguration` for the validating webhook
+
+The `Secret` and `Service` are owned by the DataPower Operator's `ReplicaSet`, and thus share the same life cycle as the operator pod itself. However, the two webhook configurations are cluster-scope resources, and are instead owned by the operator's `ClusterRole`. The expectation is that the `ClusterRole` shares the same life cycle as the DataPower Operator, but there are cases where this life cycle can be broken, leading to a mismatch between the TLS key/cert referenced by the configurations, and the TLS key/cert being used by the current operator pod.
+
+## Problem determination
+
+If you see errors relating to **bad certificate** or **x509 certificate validation** being logged in the DataPower Operator pod, you are most likely seeing this issue. Some examples are shown below to assist with problem determination.
+
+```
+2020/05/05 04:13:22 http: TLS handshake error from x.x.x.x:57076: remote error: tls: bad certificate
+```
+
+```
+Internal error occurred: failed calling webhook "datapowerservices.defaulter.datapower.ibm.com": Post https://datapower-operator.namespace.svc:443/default-datapower-ibm-com-v1beta1-datapowerservice?timeout=2s: x509: certificate signed by unknown authority (possibly because of "crypto/rsa: verification error" while trying to verify candidate authority certificate "datapower-operator-ca")
+```
+
+## Resolution
+
+To recover from this state, the following steps can be taken.
+
+1. Fetch the `MutatingWebhookConfiguration` resource from the cluster, taking note of the name (will be the first column in the output).
+
+    ```
+    kubectl get MutatingWebhookConfiguration | grep datapower.ibm.com
+    ```
+
+    Note that if you are on a shared cluster, there may be multiple results from the above command, as there could be several instances of the DataPower Operator deployed across the cluster. If you need to filter down further, you can filter by the `namespace` you've deployed the DataPower Operator in. For example:
+
+    ```
+    kubectl get MutatingWebhookConfiguration | grep datapower.ibm.com | grep namespace
+    ```
+
+2. Delete the `MutatingWebhookConfiguration` resource, where `name` is the name found in Step 1.
+
+    ```
+    kubectl delete MutatingWebhookConfiguration/name
+    ```
+
+3. Repeat Steps 1 and 2, for the `ValidatingWebhookConfiguration` resource.
+
+4. Fetch the DataPower Operator pod, taking note of the name (will be the first column in the output).
+
+    ```
+    kubectl [-n namespace] get pod | grep datapower-operator
+    ```
+
+5. Delete the DataPower Operator pod, where `name` is the name of the pod found in Step 4.
+
+    ```
+    kubectl [-n namespace] delete pod/name
+    ```
+
+The DataPower Operator's ReplicaSet will spin up a new pod, which will create all the resources in the cluster again in a clean state.
+
+## Further Troubleshooting
+
+If you continue to see issues after following the above steps, please engage IBM Support.

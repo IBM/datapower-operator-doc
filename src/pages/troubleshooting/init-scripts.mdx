@@ -1,0 +1,22 @@
+---
+title: Init Scripts
+description: Troubleshooting guide related to init scripts
+---
+
+<PageDescription>
+
+The DataPower Operator uses init scripts in the DataPower containers for various configuration management activities prior to starting the DataPower process.
+
+</PageDescription>
+
+## Debugging
+
+To aid in troubleshooting of init script related issues, the `DataPowerService` offers a [debug](/apis/datapowerservice/spec#debug) property which enabled debug logging for these init scripts. When this property is set `true` it causes all DataPower Operator provided init scripts output debug level information.
+
+<InlineNotification kind="warning">
+
+**Warning:** The `debug` property should only be set `true` if instructed by IBM Support.
+
+</InlineNotification>
+
+The output of the init scripts will be written to the container's `stdout`, which can then be retrieved using methods described in [Logging](/troubleshooting/logging#retrieving-logs).
