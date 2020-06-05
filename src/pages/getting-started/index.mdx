@@ -41,7 +41,7 @@ metadata:
 spec:
   license:
     accept: true
-    use: production
+    use: developers-limited
   version: 10.0.0
   replicas: 3
   users:
@@ -50,11 +50,11 @@ spec:
     accessLevel: privileged
 ```
 
-The above Custom Resource would be translated to a StatefulSet with 3 replicas of production licensed IBM DataPower Pods, each running the latest `10.0.0.x` fix-pack.
+The above Custom Resource would be translated to a StatefulSet with 3 replicas of `developers-limited` licensed IBM DataPower Pods (pulled from [ibmcom/datapower](https://hub.docker.com/r/ibmcom/datapower/)), each running the latest `10.0.0.x` fix-pack.
 
 For more details, see the complete `DataPowerService` API [documentation](/apis/datapowerservice/spec).
 
-## Managed StatefulSet
+### Managed StatefulSet
 
 The IBM DataPower Operator exposes the `DataPowerService` Custom Resource Definition as a mechanism to deploy and manage StatefulSets of IBM DataPower Pods. When you create a `DataPowerService` Custom Resource, the Operator will reconcile this resource by creating and managing the StatefulSet. For each `DataPowerService` Custom Resource created, another StatefulSet will be created. They are tightly coupled: when you make an update to an `DataPowerService` instance, its StatefulSet will be automatically updated accordingly.
 
@@ -63,3 +63,32 @@ The IBM DataPower Operator exposes the `DataPowerService` Custom Resource Defini
 **Warning:** You should not manually edit the StatefulSet that is created by the Operator. Any changes you make to the StatefulSet will be overwritten by the Operator during reconcilation.
 
 </InlineNotification>
+
+
+### Creating a DataPowerService instance
+
+<InlineNotification>
+
+**Note:** You must install the DataPower Operator prior to creating any `DataPowerService` Custom Resource instances.
+
+</InlineNotification>
+
+Once you've built your `DataPowerService` YAML, you can use `oc` or `kubectl` CLI tools to apply that YAML to the cluster, in a target namespace, to create the `DataPowerService` instance.
+
+```
+oc apply -f my_datapowerservice_cr.yaml
+```
+
+<InlineNotification kind="warning">
+
+**Warning:** If you attempt to create a `DataPowerService` immediately after installing the operator, you may see a timeout error from the webhooks. Simply wait ~10 seconds and try the apply/create again.
+
+</InlineNotification>
+
+### Deleting a DataPowerService instance
+
+You can delete an existing `DataPowerService` using standard `oc delete` or `kubectl delete` commands. When you delete the `DataPowerService`, the DataPower StatefulSet will also be deleted, thus deleting your DataPower deployment entirely.
+
+```
+oc delete DataPowerService/name
+```
