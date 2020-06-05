@@ -3,4 +3,68 @@ title: Configuration Management
 description: Management of IBM DataPower configuration
 ---
 
-stub
+<PageDescription>
+
+The DataPower Operator deploys and manages configuration defined by the `DataPowerService` Custom Resource spec.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Reconciliation</AnchorLink>
+  <AnchorLink>Domains</AnchorLink>
+  <AnchorLink>Users</AnchorLink>
+</AnchorLinks>
+
+## Reconciliation
+
+The DataPower Operator will reconcile any `DataPowerService` Custom Resource instance created or updated in the namespace(s) it watches. This means that when you create a new `DataPowerService` instance, the DataPower Operator will see that new instance and begin to reconcile the requested configuration.
+
+Each `DataPowerService` will be translated to a StatefulSet, which is created in the cluster in the same namespace the `DataPowerService` resides in. This StatefulSet will deploy the actual DataPower Pods. When updates are made to the `DataPowerService`, those changes are propagated to the StatefulSet automatically. When the StatefulSet is updated, it performs a rolling update to propagate any changes out to the DataPower Pods.
+
+This reconciliation behavior allows you to create a `DataPowerService` instance which specifies (for example) a couple of `users` and `domains`, and then update the backing resources (Secrets, ConfigMaps, etc.) directly in the cluster. When those resources are updated in the cluster, the DataPower Operator will automatically pick those changes up and propogate them to the StatefulSet.
+
+## Domains
+
+Each DataPower domain specified in the [domains](/apis/datapowerservice/spec#domains) property can be managed independently of the others. You can add, remove, or update any domain in the `domains` array, by modifying the `DataPowerService` instance in the cluster. For an in-depth look at what goes into configuring the `domains` property, see the [Domain Configuration](/guides/domain-configuration) guide.
+
+While the domain structures can be updated in the `domains` property (such as defining new ConfigMaps, or adding entirely new domains), the resources which back the domains can also be updated directly in the cluster.
+
+For example, if the Secret resource referenced by a domain's `certs` spec is updated to include new crypto material (such as new certs or keys), this will trigger a reconciliation of that domain to serialize the changes to the StatefulSet and DataPower Pods.
+
+Similarly, any ConfigMap referenced by the domain's `dpApp` spec can be updated in-place, and this will cause the new configuration / files to be deployed to the StatefulSet.
+
+### Annotations
+
+Annotations are added to the StatefulSet PodTemplate (and thus the Pods themselves) which provide metadata regarding when the last update was made to a particular domain:
+
+```yaml
+datapower.ibm.com/domains.default.reconciled: "2020-06-04T02:36:55Z"
+datapower.ibm.com/domains.testdomain.reconciled: "2020-06-04T02:36:55Z"
+```
+
+In the above example, you can see there are two configured domains, `default` and `testdomain`, with their respective reconciled timestamps.
+
+## Users
+
+Similarly to domains, each user specified in the [users](/apis/datapowerservice/spec#users) property can be managed independently of the others. You can add, remove, or update any user in the `users` array, by modifying the `DataPowerService` instance in the cluster.
+
+While the user structures can be updated in the `users` property (such as changing the `accessLevel` or `group`), the Secret specified by the `passwordSecret` can also be updated directly in the cluster.
+
+For example, if the Secret specified by a user's `passwordSecret` is updated in the cluster, the DataPower Operator will reconcile this change to the StatefulSet, deploying the updated user configuration.
+
+### user-commands ConfigMap
+
+The `accessLevel` and `group` properties for each user are added to a `user-commands` ConfigMap, which is mounted to each DataPower Pod in the StatefulSet. The name of this ConfigMap in built by appending `-user-commands` to the `name` of the `DataPowerService` instance.
+
+Thus, if the `accessLevel` or `group` of an existing user is updated, or any users are added or removed from the `users` spec, this ConfigMap will also be updated.
+
+### Annotations
+
+Annotations are added to the StatefulSet PodTemplate (and thus the Pods themselves) which provide metadata regarding when user configuration has been changed. There will be a single annotation for each user, by name, and then another annotation for the `user-commands` ConfigMap.
+
+```yaml
+datapower.ibm.com/user.admin.reconciled: "2020-06-04T02:36:55Z"
+datapower.ibm.com/username.commands.reconciled: "2020-06-04T02:36:55Z"
+```
+
+In the above example, you can see the `admin` user was reconciled at `2020-06-04T02:36:55Z` which aligns with the last update to the `username-commands` ConfigMap.
