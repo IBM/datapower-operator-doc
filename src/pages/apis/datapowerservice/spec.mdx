@@ -588,7 +588,9 @@ spec:
 
 ### Description
 
-The `Storage` property is a list of storage definitions. Storage definitions fall into two categories: ephermeral and persistent. The following fields can be modified:
+The `Storage` property is a list of storage definitions. Storage definitions fall into two categories: ephermeral and persistent. For persistent storage definitions, the [Persistent Volume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) must use an access mode of `ReadWriteOnce`.
+
+The following fields can be modified:
 
 - `type`
 - `path`
