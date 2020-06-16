@@ -17,6 +17,8 @@
       path: /guides/v2018-v10-migration
     - title: Domain Configuration
       path: /guides/domain-configuration
+    - title: Workload Rollbacks
+      path: /guides/workload-rollbacks
 - title: Troubleshooting
   pages:
     - title: Logging
