@@ -5,11 +5,17 @@ import { calloutLink } from './Homepage.module.scss';
 
 import Carbon from '../../images/carbon.jpg';
 
-const FirstLeftText = () => <p>Under construction</p>;
+const FirstLeftText = () => <p>Version 1.0.0</p>;
 
 const FirstRightText = () => (
   <p>
-    This documentation website is still under construction.
+    Check out the latest release notes here.
+    <a
+      className={calloutLink}
+      href="/release-notes"
+    >
+      Release notes →
+    </a>
   </p>
 );
 
