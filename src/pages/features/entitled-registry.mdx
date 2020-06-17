@@ -1,0 +1,56 @@
+---
+title: Pulling images from the IBM Entitled Registry
+description: Describes the usage of ibm-entitlement-key and pulling images from the IBM Entitled Registry
+---
+
+<PageDescription>
+
+The DataPower Operator supports automatically pulling IBM DataPower images from the IBM Entitled Registry using your entitlement key.
+
+</PageDescription>
+
+## Image Selection
+
+When configuring the `DataPowerService` Custom Resource, there are two properties which will determine which image is pulled, and from what container registry:
+
+- [version](/apis/datapowerservice/spec#version)
+- [license.use](/apis/datapowerservice/spec#license)
+
+The `version` property will decide which base firmware version should be used, while the `license.use` will determine which edition to use.
+
+If the `license.use` value is one of the following values, the image will be pulled from the IBM Entitled Registry:
+
+- `production`
+- `nonproduction`
+- `developers`
+
+If the `license.use` value is `developers-limited`, the image will be pulled from Dockerhub.
+
+## Image Pull Secret
+
+If the IBM DataPower image is to be pulled from the IBM Entitled Registry, an Entitlement Key must be provided as an Image Pull Secret. You can obtain an Entitlement Key from [My IBM](https://myibm.ibm.com/products-services/containerlibrary).
+
+### Creating the Secret
+
+For the DataPower Operator to automatically consume your Entitlement Key, you must create a `Secret` in the same namespace as the `DataPowerService` Custom Resource.
+
+1. Use `ibm-entitlement-key` as the name of the Secret
+2. Use `cp` as the username
+3. Use your Entitlement Key as the password
+4. Use `cp.icr.io` as the Docker server
+
+For example:
+
+```
+oc create secret docker-registry \
+  ibm-entitlement-key \
+  --docker-username=cp \
+  --docker-password=<entitlement-key> \
+  --docker-server=cp.icr.io
+```
+
+For more information on creating Secrets using the Kubernetes command line, please see their [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-secret-by-providing-credentials-on-the-command-line).
+
+### Using a custom Service Account
+
+If you choose to provide your own custom Service Account via the [serviceAccountName](/apis/datapowerservice/spec#serviceaccountname) property on the `DataPowerService` spec, then the DataPower Operator **will not** automatically attempt to use a `ibm-entitlement-key` Secret. Instead, you should either add this Image Pull Secret to your Service Account, or provide it manually via the [imagePullSecrets](/apis/datapowerservice/spec#imagepullsecrets) property.

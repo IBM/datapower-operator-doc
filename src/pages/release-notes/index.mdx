@@ -3,6 +3,14 @@ title: Release Notes
 description: IBM DataPower release notes
 ---
 
+## 1.0.1
+
+- Several changes and enhancements to support deployment via IBM Cloud Pak for Integration, including:
+  - A minimal `ServiceAccount` is generated for use by the StatefulSet is none is provided in the `DataPowerService` Custom Resource spec.
+  - Support for automatically using an `ibm-entitlement-key` Secret to pull images from the IBM Container Registry.
+  - Labels and Annotations for Licensing and Metering of workloads, both standalone and within IBM Cloud Pak for Integration.
+  - Kibana dashboard support.
+
 ## 1.0.0
 
 Initial release.
