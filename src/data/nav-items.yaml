@@ -7,6 +7,8 @@
       path: /apis/datapowerservice/spec
 - title: Features
   pages:
+    - title: IBM Entitled Registry
+      path: /features/entitled-registry
     - title: Configuration Management
       path: /features/config-mgmt
     - title: Operand Upgrades

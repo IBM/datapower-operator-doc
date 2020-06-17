@@ -5,7 +5,7 @@ import { calloutLink } from './Homepage.module.scss';
 
 import Carbon from '../../images/carbon.jpg';
 
-const FirstLeftText = () => <p>Version 1.0.0</p>;
+const FirstLeftText = () => <p>Version 1.0.1</p>;
 
 const FirstRightText = () => (
   <p>
