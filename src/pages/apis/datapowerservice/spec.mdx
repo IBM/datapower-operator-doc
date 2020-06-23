@@ -676,6 +676,8 @@ spec:
 
 The `serviceAccountName` is a pass-through field for a Pod's ServiceAccountName. This field should be a string that is the name of the Service Account that is to be used by the deployed DataPower Pods.
 
+If no value is provided, a minimal Service Account will be generated for use by the StatefulSet. The generated Service Account will also include reference to the `ibm-entitlement-key` image pull secret. For more information on this, see the [Entitled Registry](/features/entitled-registry) documentation.
+
 ### Example
 
 ```yaml
