@@ -34,7 +34,15 @@ Internal error occurred: failed calling webhook "datapowerservices.defaulter.dat
 
 ## Resolution
 
-To recover from this state, the following steps can be taken.
+To recover from this state, both the `MutatingWebhookConfiguration` and `ValidatingWebhookConfiguration` configurations need to be manually deleted, and then recreated by the DataPower Operator. At a high-level, this process will be the following:
+
+1. Delete stale `MutatingWebhookConfiguration` resource
+2. Delete stale `ValidatingWebhookConfiguration` resource
+3. Delete `datapower-operator` Pod
+
+When the `datapower-operator` Pod is deleted, it will automatically be recreated by the Deployment, and the newly created Pod will recreate the webhook configuration resources.
+
+### Steps to Recover
 
 1. Fetch the `MutatingWebhookConfiguration` resource from the cluster, taking note of the name (will be the first column in the output).
 
@@ -42,7 +50,13 @@ To recover from this state, the following steps can be taken.
     kubectl get MutatingWebhookConfiguration | grep datapower.ibm.com
     ```
 
-    Note that if you are on a shared cluster, there may be multiple results from the above command, as there could be several instances of the DataPower Operator deployed across the cluster. If you need to filter down further, you can filter by the `namespace` you've deployed the DataPower Operator in. For example:
+    <InlineNotification>
+
+    Note that if you are on a shared cluster, there may be multiple results from the above command, as there could be several instances of the DataPower Operator deployed across the cluster.
+
+    </InlineNotification>
+
+    If you need to filter down further, you can filter by the `namespace` you've deployed the DataPower Operator in. For example:
 
     ```
     kubectl get MutatingWebhookConfiguration | grep datapower.ibm.com | grep namespace
@@ -54,21 +68,43 @@ To recover from this state, the following steps can be taken.
     kubectl delete MutatingWebhookConfiguration/name
     ```
 
-3. Repeat Steps 1 and 2, for the `ValidatingWebhookConfiguration` resource.
+3. Fetch the `ValidatingWebhookConfiguration` resource from the cluster, taking note of the name (will be the first column in the output).
 
-4. Fetch the DataPower Operator pod, taking note of the name (will be the first column in the output).
+    ```
+    kubectl get ValidatingWebhookConfiguration | grep datapower.ibm.com
+    ```
+
+    <InlineNotification>
+
+    Note that if you are on a shared cluster, there may be multiple results from the above command, as there could be several instances of the DataPower Operator deployed across the cluster.
+
+    </InlineNotification>
+
+    If you need to filter down further, you can filter by the `namespace` you've deployed the DataPower Operator in. For example:
+
+    ```
+    kubectl get ValidatingWebhookConfiguration | grep datapower.ibm.com | grep namespace
+    ```
+
+4. Delete the `ValidatingWebhookConfiguration` resource, where `name` is the name found in Step 3.
+
+    ```
+    kubectl delete ValidatingWebhookConfiguration/name
+    ```
+
+5. Fetch the DataPower Operator pod, taking note of the name (will be the first column in the output).
 
     ```
     kubectl [-n namespace] get pod | grep datapower-operator
     ```
 
-5. Delete the DataPower Operator pod, where `name` is the name of the pod found in Step 4.
+6. Delete the DataPower Operator pod, where `name` is the name of the pod found in Step 5.
 
     ```
     kubectl [-n namespace] delete pod/name
     ```
 
-The DataPower Operator's ReplicaSet will spin up a new pod, which will create all the resources in the cluster again in a clean state.
+The DataPower Operator's ReplicaSet will schedule a new Pod, which will create all the resources in the cluster again in a clean state.
 
 ## Further Troubleshooting
 
