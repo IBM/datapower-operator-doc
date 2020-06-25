@@ -1,0 +1,44 @@
+---
+title: DataPower Operator Upgrades
+description: Troubleshooting guide related to upgrading the DataPower Operator
+---
+
+<PageDescription>
+
+If any known issues exist or migration paths are needed to upgrade from one version of the DataPower Operator to another, they will be documented here.
+
+</PageDescription>
+
+# 1.0.1
+
+## Invalid value for `spec.selector`
+
+When attempting to ugprade from `1.0.0` to `1.0.1` through the Operator Lifecycle Manager, an error will likely be seen that the `installPlan` failed.
+
+```
+install strategy failed: Deployment.apps "datapower-operator" is invalid: spec.selector: Invalid value: v1.LabelSelector{...}, MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable
+```
+
+This error occurs because between version `1.0.0` and `1.0.1` a new `label` was added to the DataPower Operator Deployment resource to fix an issue related to operator-metrics. However, the install plan is not able to resolve this update because the LabelSelector is an immutable field.
+
+### Resolution
+
+To workaround this issue, you can manually delete the existing `datapower-operator` Deployment resource. The Operator Lifecycle Manager should then recreate the `datapower-operator` Deployment resource with the `1.0.1` spec, and the install plan should succeed.
+
+```
+oc delete deployment datapower-operator
+```
+
+Once done, validate a new `datapower-operator` Deployment is created:
+
+```
+oc get deployment
+```
+
+Then validate the `1.0.1` install plan succeeds by checking the `ClusterServiceVersion` resource:
+
+```
+$ oc get csv
+NAME                        DISPLAY                 VERSION   REPLACES                    PHASE
+datapower-operator.v1.0.1   IBM DataPower Gateway   1.0.1     datapower-operator.v1.0.0   Succeeded
+```
