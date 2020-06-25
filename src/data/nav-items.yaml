@@ -31,6 +31,8 @@
       path: /troubleshooting/stale-webhooks
     - title: Init Scripts
       path: /troubleshooting/init-scripts
+    - title: Operator Upgrades
+      path: /troubleshooting/operator-upgrades
 - title: Release Notes
   pages:
     - path: /release-notes
