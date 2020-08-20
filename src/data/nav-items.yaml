@@ -1,6 +1,12 @@
 - title: Getting started
   pages:
     - path: /getting-started
+- title: Install
+  pages:
+    - title: Installation via OLM
+      path: /install/olm
+    - title: Installation via CASE
+      path: /install/case
 - title: APIs
   pages:
     - title: DataPowerService

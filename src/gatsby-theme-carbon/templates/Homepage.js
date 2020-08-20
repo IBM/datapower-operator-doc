@@ -2,20 +2,23 @@ import React from 'react';
 import { HomepageBanner, HomepageCallout } from 'gatsby-theme-carbon';
 import HomepageTemplate from 'gatsby-theme-carbon/src/templates/Homepage';
 import { calloutLink } from './Homepage.module.scss';
+import { Link } from 'gatsby'
 
 import Carbon from '../../images/carbon.jpg';
 
-const FirstLeftText = () => <p>Version 1.0.1</p>;
+const FirstLeftText = () => <p>Version 1.0.2</p>;
 
 const FirstRightText = () => (
   <p>
     Check out the latest release notes here.
-    <a
-      className={calloutLink}
-      href="/release-notes"
-    >
-      Release notes →
-    </a>
+
+    <div className={calloutLink}>
+      <Link
+        to="release-notes"
+      >
+        Release notes →
+      </Link>
+    </div>
   </p>
 );
 
