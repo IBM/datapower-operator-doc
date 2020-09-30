@@ -1,0 +1,138 @@
+---
+title: Prerequisites
+description: Prerequisites to validate prior to installation
+---
+
+<PageDescription>
+
+Ensure your environment meets the following requirements prior to installing the DataPower Operator and deploying Custom Resources.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Container environment</AnchorLink>
+  <AnchorLink>Resource requirements</AnchorLink>
+  <AnchorLink>Optional: PodSecurityPolicy</AnchorLink>
+  <AnchorLink>Optional: SecurityContextConstraints</AnchorLink>
+  <AnchorLink>Optional: Multiple Failure Zones</AnchorLink>
+</AnchorLinks>
+
+## Container environment
+
+### Supported platforms
+
+The DataPower Operator currently supports:
+
+- OpenShift Container Platform (OCP) 4.4+
+- Kubernetes 1.16+
+
+### Worker node configuration
+
+Installation of the DataPower Operator does not support adding Tolerations to the Operator Deployment resource out-of-the-box. To install properly, there must be one worker in the desired availability zone that is not tainted. If Tolerations are nonnegotiable, you can install the DataPower Operator using the [helm chart](https://github.com/IBM/datapower-operator-chart) and add the Tolerations to the Deployment template manually.
+
+## Resource requirements
+
+### Operator
+
+The DataPower Operator's `Deployment` uses the following resource spec:
+
+```yaml
+resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+  limits:
+    cpu: 2
+    memory: "2Gi"
+```
+
+For more information on what this spec means, see [Managing Resources for Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
+
+### Operand
+
+- The **minimum** resource requirements for a single DataPower container are 4 CPU and 4 GB of memory.
+- For API Connect workloads, a minimum of 8 GB of memory is required per container.
+- For production high-availability, a minimum of 3 replicas (one per node) are recommended.
+
+See also: [System requirements for IBM DataPower Gateways](https://www.ibm.com/support/pages/node/613133)
+
+## Optional: PodSecurityPolicy
+
+The DataPower Operator is expected to work as-is with the standard `restricted` PodSecurityPolicy; however, if you wish to leverage a more restrictive policy the following can be used.
+
+```yaml
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: ibm-datapower-operator-restricted-psp
+spec:
+  allowPrivilegeEscalation: false
+  forbiddenSysctls:
+    - '*'
+  hostNetwork: false
+  hostPorts: false
+  requiredDropCapabilities:
+    - ALL
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+```
+
+## Optional: SecurityContextConstraints
+
+The DataPower Operator is expected to work as-is with the standard `restricted` SecurityContextConstraints; however, if you wish to leverage a more restrictive constraints the following can be used.
+
+<InlineNotification>
+
+**Note:** This is only applicable to OpenShift (OCP) clusters.
+
+</InlineNotification>
+
+```yaml
+kind: SecurityContextConstraints
+apiVersion: v1
+metadata:
+  name: ibm-datapower-operator-scc
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities: null
+apiVersion: security.openshift.io/v1
+defaultAddCapabilities: null
+groups:
+  - system:authenticated
+priority: null
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+  - ALL
+runAsUser:
+  type: MustRunAsNonRoot
+seLinuxContext:
+  type: RunAsAny
+users: []
+volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - persistentVolumeClaim
+  - projected
+  - secret
+```
+
+## Optional: Multiple Failure Zones
+
+The DataPower Operator `Deployment` is designed to pods evenly across multiple Kubernetes zones. To take advantage of this functionality, follow the [prerequisites](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/#prerequisites) for Pod Topology Spread Constraints.
+
+With `EvenPodsSpread` enabled in the cluster, no more than one DataPower Operator pod will be deployed per zone. If `replicaCount` is higher than the number of available zones, the remaining replicas will not be scheduled.

@@ -1,0 +1,31 @@
+---
+title: API Migration
+description: Migration of CustomResourceDefinition API versions
+---
+
+<PageDescription>
+
+As new CustomResourceDefinition API versions are released, the API migrations which occur on those boundaries will be documented here.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Background</AnchorLink>
+  <AnchorLink>v1beta2 migration</AnchorLink>
+</AnchorLinks>
+
+## Background
+
+As we iterate on the DataPower Operator, add new functionality, etc. our APIs will invetibly change over time. Our APIs are described by our CustomResourceDefinitions (CRDs), which have an `apiVersion` associated with them. Each version of a given CRD can have its own schema, and thus the functionality of a given CRD version can change over time.
+
+For more information on the conversion webhook that makes these migrations possible, see our [Conversion webhook](/features/webhooks#conversion-webhook) documentation.
+
+## v1beta2 migration
+
+The release of `1.1.0` introduces a `v1beta2` API and a new `DataPowerMonitor` CustomResourceDefinition. When upgrading from `1.0.x` to `1.1.x` the following migrations will occur:
+
+- Any existing `v1beta1` `DataPowerService` Custom Resources (CRs) will be converted to `v1beta2` CRs.
+- The `dataPowerMonitor` spec from the `v1beta1` CR will be translated to an equivalent `v1beta2` `DataPowerMonitor` CR.
+- If a `v1beta1` `DataPowerService` specified a **channel** in `spec.version` it will be converted according to the following rules:
+  - `spec.version: 10.0.0` becomes `spec.version: 10.0-cd`
+  - `spec.version: 10.0.1` becomes `spec.version: 10.0-lts`

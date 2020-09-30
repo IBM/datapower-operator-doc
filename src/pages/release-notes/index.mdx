@@ -1,7 +1,29 @@
 ---
 title: Release Notes
-description: IBM DataPower release notes
+description: IBM DataPower Operator release notes
 ---
+
+## 1.1.0
+
+### v1beta2 APIs
+
+`1.1.0` introduces a new `v1beta2` API version, consisting of an **updated** [`DataPowerService`](/apis/datapowerservice/v1beta2) CustomResourceDefition (CRD), and a **new** [`DataPowerMonitor`](/apis/datapowermonitor/v1beta2) CRD.
+
+For more details on the (automatic) API migration process, see [API Migration](/features/api-migration).
+
+With the new `v1beta2` API, the following changes have been made:
+
+#### `DataPowerService`
+
+- Removed `dataPowerMonitor` (replaced by `DataPowerMonitor` CRD).
+- Added support for custom [`tolerations`](/apis/datapowerservice/v1beta2#tolerations).
+- Added support for custom [`nodeSelector`](/apis/datapowerservice/v1beta2#nodeselector).
+- Added `mgmtPorts` to Custom Resource `Status`.
+- Changed the `version` [channel structure](/apis/datapowerservice/v1beta2#available-channels).
+
+#### `DataPowerMonitor`
+
+See the API spec [here](/apis/datapowermonitor/v1beta2), and more information on the functionality [here](/features/monitor).
 
 ## 1.0.2
 

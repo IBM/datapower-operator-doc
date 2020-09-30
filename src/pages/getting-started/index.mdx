@@ -14,7 +14,7 @@ IBM DataPower Operator is capable of packaging, deploying, and managing your IBM
 There are two methods to install the IBM DataPower Operator:
 
 1. [Helm chart](https://github.com/IBM/datapower-operator-chart)
-2. Operator Lifecycle Manager (OLM)
+2. [Operator Lifecycle Manager (OLM)](/install/olm)
 
 <!-- This should be updated / removed when the Operator joins OperatorHub -->
 <InlineNotification>
@@ -25,12 +25,12 @@ Currently installation via OLM requires manually loading the IBM DataPower Opera
 
 ## Intro to DataPowerService
 
-The `DataPowerService` is a Custom Resource Definition exposed by the IBM DataPower Operator. It is the primary API you will leverage to create and manage your deployments of IBM DataPower.
+The `DataPowerService` is a CustomResourceDefinition exposed by the IBM DataPower Operator. It is the primary API you will leverage to create and manage your deployments of IBM DataPower Gateway.
 
 Below is a brief example of what a minimal `DataPowerService` may look like:
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta1
+apiVersion: datapower.ibm.com/v1beta2
 kind: DataPowerService
 metadata:
   name: example
@@ -42,7 +42,7 @@ spec:
   license:
     accept: true
     use: developers-limited
-  version: 10.0.0
+  version: 10.0-lts
   replicas: 3
   users:
   - name: admin

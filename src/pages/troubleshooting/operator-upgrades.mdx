@@ -9,6 +9,35 @@ If any known issues exist or migration paths are needed to upgrade from one vers
 
 </PageDescription>
 
+# 1.1.0
+
+## Operator lock not released after Leader Pod removed
+
+### Symptoms
+
+- Immediately following an upgrade from 1.0.X to 1.1.X, you may see the following error when attempting to interact with a DataPowerService CR:
+  ```
+  Error from server: conversion webhook for datapower.ibm.com/v1beta1, Kind=DataPowerService failed: Post https://changeme.default.svc:443/?timeout=30s: service "changeme" not found
+  ```
+- Failure to reconcile changes made to a DataPowerService CR after a failover event caused the previous DataPower Operator Leader Pod to be rescheduled.
+
+### Description
+
+Occasionally, when the DataPower Operator Leader Pod is removed, the new DataPower Operator Pod will show as being Ready but isn't doing anything. In the logs you might see
+```
+{"level":"info","ts":"2020-09-08T19:29:53.432Z","logger":"leader","msg":"Not the leader. Waiting."}
+{"level":"info","ts":"2020-09-08T19:29:57.971Z","logger":"leader","msg":"Leader pod has been deleted, waiting for garbage collection do remove the lock."}
+```
+followed by additional waiting. In this case, Kubernetes' garbage collection failed to clean up the `datapower-operator-lock` after the old Leader Pod was removed. This stops the new DataPower Operator Pod from completing initialization tasks such as creating the conversion webhook.
+
+### Solution
+
+To resolve this issue, you must manually remove the lock resource. This can be done with
+```
+kubectl delete cm datapower-operator-lock
+```
+Once the lock is removed, the new DataPower Operator pod will begin its initialization.
+
 # 1.0.1
 
 ## Invalid value for `spec.selector`

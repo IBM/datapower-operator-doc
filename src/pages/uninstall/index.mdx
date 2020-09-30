@@ -1,0 +1,63 @@
+---
+title: Uninstalling
+description: Guide to uninstalling the DataPower Operator.
+---
+
+<PageDescription>
+
+A guide to uninstalling the DataPower Operator with troubleshooting tips and workarounds.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Order of uninstallation</AnchorLink>
+  <AnchorLink>Uninstalling with OLM</AnchorLink>
+  <AnchorLink>Uninstalling with CASE</AnchorLink>
+  <AnchorLink>Known issues</AnchorLink>
+</AnchorLinks>
+
+## Order of uninstallation
+Resources **must** be removed in the following order to avoid deadlocks:
+1. Remove all `DataPowerService` and `DataPowerMonitor` Custom Resources from namespace.
+2. Uninstall Operator with either OLM or CASE.
+3. If completely removing from cluster, remove CRDs.
+
+## Uninstalling with OLM
+
+### In the GUI
+
+In the OCP GUI, navigate to Operators->Installed Operators on the left side pane. In the `Project` dropdown box, select the namespace from which to uninstall. Find the specific DataPower Operator Subscription you wish to uninstall and click the options menu on the right side of the row. Select "Uninstall Operator".
+
+### In the CLI
+
+Using the `oc` CLI tool, delete the DataPower Operator Subscription by doing
+```
+oc -n mynamespace delete subscription datapower-operator
+```
+
+## Uninstalling with CASE
+
+For uninstalling via CASE, refer to the relevant uninstall command in the [CASE document](/install/case).
+
+## Removing CRDs
+
+To remove the DataPower CRDs from the cluster, run
+```
+kubectl delete crds datapowerservices.datapower.ibm.com
+kubectl delete crds datapowermonitors.datapower.ibm.com 
+```
+
+## Known issues
+
+### Custom Resource deletion blocked by conversion
+
+As of DataPower Operator version 1.1.0, a conversion webhook is deployed by the DataPower Operator. If the conversion webhook was managed by the DataPower Operator being uninstalled it will get cleaned up due to having Owner References set to the managing DataPower Operator. If you are uninstalling the last DataPower Operator in the cluster, no new conversion webhook will get deployed. Once in this state, it becomes impossible to delete or create new `DataPowerService` Custom Resources because the Kubernetes API Server is attempting to connect to a no-longer-alive conversion webhook.
+
+To clear out the conversion definition, run
+```
+kubectl patch crds datapowerservices.datapower.ibm.com -p '{"spec": {"conversion": null}}'
+```
+
+After the patch has been processed, the custom resources can be modified and deleted.
+
+To avoid getting into this situation in the future, remove all `DataPowerService` Custom Resources before uninstalling the DataPower Operator.

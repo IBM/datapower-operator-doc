@@ -1,0 +1,80 @@
+---
+title: DataPower Monitor
+description: Details about the DataPower Operator's monitor feature
+---
+
+<PageDescription>
+
+The DataPower Monitor provides valueable pod lifecycle event logging as well as ensuring the stability of peering among DataPower gateway pods.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Relation to DataPowerService</AnchorLink>
+  <AnchorLink>Pod Events</AnchorLink>
+  <AnchorLink>Gateway Peering Monitoring</AnchorLink>
+</AnchorLinks>
+
+## Relation to DataPowerService
+
+For a given `DataPowerService` instance, there must be a matching `DataPowerMonitor` instance. This relationship or linkage is held through the `name` metadata property of each instance. The `DataPowerService` and `DataPowerMonitor` custom resource instances **must** share the same `name` to be considered linked.
+
+### Automatic creation
+
+During the reconciliation of a `DataPowerService` instance, the DataPower Operator will look in the same namespace for a matching `DataPowerMonitor` instance with the same `name`. If no instance is found, one will be created with default values.
+
+The `DataPowerService` instance will own the `DataPowerMonitor` instance, and thus if the `DataPowerService` instance is deleted, the `DataPowerMonitor` will be garbage collected automatically.
+
+<InlineNotification>
+
+You can modify the `DataPowerMonitor` instance spec once it's automatically created.
+
+</InlineNotification>
+
+### Creating a DataPowerMonitor manually
+
+If you wish to control the lifecycle of the `DataPowerMonitor` resource and provide custom configuration at deploy-time, you can create the `DataPowerMonitor` instance yourself.
+
+The following rules apply:
+
+- The `DataPowerMonitor` custom resource instance **must be created before** the matching `DataPowerService` custom resource instance.
+- The `name` of the `DataPowerMonitor` custom resource you create **must** match the `name` of the `DataPowerService` you intend to create.
+- The `DataPowerMonitor` instance **will not** be automatically cleaned up when the matching `DataPowerService` is deleted.
+
+## Pod Events
+
+The `DataPowerMonitor` controller watches for Pod events from the cluster. When an event is received, it's inspected to determine if the associated Pod is managed by the linked `DataPowerService` custom resource instance. If the associated Pod is managed by the linked `DataPowerService` instance, then the Pod event is handled.
+
+When a Pod event is first received and handled, the `lastEvent` Status property will be set with the timestamp of the Pod event, and `workPending` will be set `true`.
+
+The [`lifecycleDebounceMs`](/apis/datapowermonitor/v1beta2#lifecycledebouncems) property determines how much time should pass between Pod events before work will be performed. Once that time has elapsed, work will be completed.
+
+When work is in-progress (e.g., [Gateway Peering Monitoring](/features/monitor#gateway-peering-monitoring)), the `workInProgress` Status property will be set `true`, `workPending` set back to `false`, and `lastEvent` cleared.
+
+Once work is complete, `workInProgress` will be set `false`.
+
+For more details on the properties and status discussed, see the [API documentation](/apis/datapowermonitor/v1beta2).
+
+### Logging
+
+All Pod events associated with the linked `DataPowerService` will be logged (at `info` level) with various metadata for troubleshooting purposes. The logs themselves can contain the following information:
+
+- Message (`msg`) will be one of:
+  - `Observed Pod event`
+  - `Warning: Pod failed to schedule`
+  - `Warning: Container is in waiting state`
+- `Monitor.Name`: the name of the associated `DataPowerMonitor`
+- `Pod.Name`: the name of the Pod that triggered the event
+- `Pod.Namespace`: the namespace in which the Pod resides
+- `Pod.UID`: the Pod's UID
+- `Pod.IP`: the Pod's IP address
+- `Reason`: reason associated event condition or container status
+- `Message`: message associated with event condition or container status
+
+## Gateway Peering Monitoring
+
+When a `DataPowerService` set of Pods are configured to use gateway peering (e.g. in the API Connect Gateway Service) and the associated `DataPowerMonitor` has `monitorGatewayPeering` enabled, the DataPower Operator will ensure that the gateway peering configurations remain stable.
+
+The DataPower Monitor achieves this by responding to pod lifecycle events (e.g., when a DataPower pod is deleted or restarts) by examining the gateway peering status for every active pod. If a pod has "stale peers" (i.e., failed connections to peers that no longer exist), the DataPower Monitor will issue a maintanence command to reset its peering status. This will cause the pod to drop its connections to all of its peers, both active and inactive, at which point the active peers will reestablish their connections to the pod, and thus only connections to active peers will remain.
+
+This process is all necessary because individual gateways do not always have enough information to determine when a peer has been removed permanently, and thus assistance from the Operator is needed.
