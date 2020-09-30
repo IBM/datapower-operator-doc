@@ -1,0 +1,132 @@
+---
+title: Webhooks
+description: Admission controllers and conversion webhooks deployed and managed by the DataPower Operator
+---
+
+<PageDescription>
+
+The DataPower Operator deploys and manages various Kubernetes API webhooks in the cluster to assist in management of its custom resources.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Defaulting webhook</AnchorLink>
+  <AnchorLink>Validating webhook</AnchorLink>
+  <AnchorLink>Conversion webhook</AnchorLink>
+</AnchorLinks>
+
+## Defaulting webhook
+
+### Purpose
+
+The defaulting webhook is a type of [MutatingAdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) which runs against Custom Resources (CRs) at `CREATE` or `UPDATE` time to populate default values in the CR's `spec`. Our API documentation for each CRD includes what defaults will be set by the webhook.
+
+### Creation
+
+Currently the defaulting webhook runtime is part of the DataPower Operator runtime, i.e. it exists within the DataPower Operator pod and container. When the operator boots, it creates `MutatingWebhookConfiguration` resources for each CRD (listed below). This `MutatingWebhookConfiguration` is a cluster-scope resource, but the configuration within will be specific to the namespace and operator instance which created it. If more than one instance of the DataPower Operator is deployed across a cluster (in different namespaces) there will be a set of webhook configurations for each DataPower Operator instance and namespace.
+
+The name for the `MutatingWebhookConfiguration` resource for each CRD will take the following form:
+
+```
+<namespace>.<crd-name>.defaulter.datapower.ibm.com
+```
+
+The following CustomResourceDefinitions utilize a defaulting webhook:
+
+- `DataPowerService`
+- `DataPowerMonitor`
+
+### Lifecycle
+
+While the defaulting webhook runtime itself lives within the DataPower Operator pod, the `MutatingWebhookConfiguration` is a cluster-scope resource and is stand-alone. When it is created, an `ownerReference` is set on it that references the DataPower Operator's `ClusterRole`. Thus, the lifecycle of the `MutatingWebhookConfiguration` resources will be linked with the `ClusterRole`, which is linked with the installation of the operator itself.
+
+When the operator is uninstalled, the `MutatingWebhookConfiguration` resources for that operator instance are also removed.
+
+### Example
+
+The below output shows the defaulting webhook configurations created for an operator deployed in the `datapower-operator` namespace. One can be seen for each CRD.
+
+```
+$ oc get mutatingwebhookconfiguration
+NAME                                                               WEBHOOKS   AGE
+datapower-operator.datapowermonitors.defaulter.datapower.ibm.com   1          3h30m
+datapower-operator.datapowerservices.defaulter.datapower.ibm.com   1          3h30m
+```
+
+## Validating webhook
+
+### Purpose
+
+The validating webhook is a type of [ValidatingAdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook) which runs against Custom Resources (CRs) at `CREATE` or `UPDATE` time to validate the CR contains a configuration which will yield an operable cluster. The CustomResourceDefinitions use OpenAPI schema validation for basic property checks (such as integer bounds and non-empty strings), but more complex validation of the configuration is done via the webhook.
+
+### Creation
+
+Currently the validating webhook runtime is part of the DataPower Operator runtime, i.e. it exists within the DataPower Operator pod and container. When the operator boots, it creates `ValidatingWebhookConfiguration` resources for each CRD (listed below). This `ValidatingWebhookConfiguration` is a cluster-scope resource, but the configuration within will be specific to the namespace and operator instance which created it. If more than one instance of the DataPower Operator is deployed across a cluster (in different namespaces) there will be a set of webhook configurations for each DataPower Operator instance and namespace.
+
+The name for the `ValidatingWebhookConfiguration` resource for each CRD will take the following form:
+
+```
+<namespace>.<crd-name>.validator.datapower.ibm.com
+```
+
+The following CustomResourceDefinitions utilize a validating webhook:
+
+- `DataPowerService`
+- `DataPowerMonitor`
+
+### Lifecycle
+
+While the validating webhook runtime itself lives within the DataPower Operator pod, the `ValidatingWebhookConfiguration` is a cluster-scope resource and is stand-alone. When it is created, an `ownerReference` is set on it that references the DataPower Operator's `ClusterRole`. Thus, the lifecycle of the `ValidatingWebhookConfiguration` resources will be linked with the `ClusterRole`, which is linked with the installation of the operator itself.
+
+When the operator is uninstalled, the `ValidatingWebhookConfiguration` resources for that operator instance are also removed.
+
+### Example
+
+The below output shows the validating webhook configurations created for an operator deployed in the `datapower-operator` namespace. One can be seen for each CRD.
+
+```
+$ oc get validatingwebhookconfiguration
+NAME                                                               WEBHOOKS   AGE
+datapower-operator.datapowermonitors.validator.datapower.ibm.com   1          3h44m
+datapower-operator.datapowerservices.validator.datapower.ibm.com   1          3h44m
+```
+
+## Conversion webhook
+
+### Purpose
+
+The DataPowerService CustomResource now has multiple versions which have some large, meaningful changes between them that cannot be resolved with the default Kubernetes conversion strategy. An example of such a change is the removal of the `datapowerMonitor` spec in the upgrade from DataPowerService `v1beta1` to `v1beta2`. In the default mode, the `datapowerMonitor` spec would be dropped after the CRD is upgraded from `v1beta1` to `v1beta2`, losing user data. To define a more intelligent upgrade path, a conversion webhook is used. Continuing the example of the `datapowerMonitor` spec, the DataPower Operator conversion webhook preserves the user data by pulling out the `datapowerMonitor` spec and putting that spec into the related DataPowerMonitor CustomResource, which is what removed the need for the `datapowerMonitor` spec.
+
+### Resources
+
+The conversion webhook is made up of four components:
+1. `datapower-operator-conversion-webhook` Deployment
+2. `datapower-operator-conversion-webhook` Service
+3. `datapower-conversion-key-cert` Secret
+4. Conversion definition in DataPowerService CRD
+
+**`datapower-operator-conversion-webhook` Deployment**
+
+The `datapower-operator-conversion-webhook` Deployment manages the conversion webhook runtime Pod.
+
+**`datapower-operator-conversion-webhook` Service**
+
+The `datapower-operator-conversion-webhook` Service is used by the KubeAPI to reach the conversion webhook runtime as defined in the DataPowerService CRD.
+
+**`datapower-conversion-key-cert` Secret**
+
+The `datapower-conversion-key-cert` Secret contains the TLS key and cert used to authenticate communication with the KubeAPI. If this Secret is deleted, a new key-cert pair will be generated and used instead.
+
+**Conversion definition in DataPowerService CRD**
+
+The DataPowerService CRD defines how one version should be converted to another. By default, the `conversionStrategy` is `None` but this is changed by the DataPower Operator to use a `conversionStrategy` of `Webhook`. This conversion definition contains the Service name, port, etc that should be used to communicate with the webhook runtime and a representation of the TLS certificate for authentication. This definition is updated as needed by the DataPower Operator managing the cluster's `datapower-operator-conversion-webhook` Deployment.
+
+### Creation
+
+The `datapower-operator-conversion-webhook` Deployment is created and managed by the DataPower Operator. However, there can only be a single active conversion webhook in a cluster as only a single conversion definition is stored in the CRD. To accomodate this, the DataPower Operator scans all namespaces looking for an existing `datapower-operator-conversion-webhook`. This requires having cluster level permissions for listing/getting Namespaces and Deployments. If a `datapower-operator-conversion-webhook` Deployment is found, the DataPower Operator will check an annotation `datapower.ibm.com/managed-by` to determine if that webhook is managed by another DataPower Operator instance. If it is not being managed, the DataPower Operator that found the instance will claim ownership of the conversion webhook Deployment. If a conversion webhook Deployment is not found, one will be created in the same namespace as the DataPower Operator doing the scanning. In this way, there is always only one DataPower Operator conversion webhook in a cluster at a time.
+
+When a `datapower-operator-conversion-webhook` Deployment is being managed, the managing DataPower Operator will inspect the namespace to verify that a correct `datapower-operator-conversion-webhook` Service and `datapower-conversion-key-cert` Secret exist. If they don't exist or are not correct, they will be created. Once all resources are created and correct, the managing DataPower Operator will update the conversion definition in the DataPowerService CRD to reflect the new configuration.
+
+### Lifecycle
+
+All conversion resources (1, 2, 3 above) are owned by the managing DataPower Operator. When the managing DataPower Operator Deployment is deleted, all conversion resources will be garbage collected. The conversion definition stored in the DataPowerService CRD is not cleaned up and will remain. This will potentially cause problems during uninstallation of the last DataPower Operator in the cluster, follow the [uninstallation guide](/uninstall) to be safe.

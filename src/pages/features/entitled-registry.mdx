@@ -18,13 +18,12 @@ When configuring the `DataPowerService` Custom Resource, there are two propertie
 
 The `version` property will decide which base firmware version should be used, while the `license.use` will determine which edition to use.
 
-If the `license.use` value is one of the following values, the image will be pulled from the IBM Entitled Registry:
-
-- `production`
-- `nonproduction`
-- `developers`
-
-If the `license.use` value is `developers-limited`, the image will be pulled from Dockerhub.
+|`license.use`       |Registry             |Image location                            |
+|--------------------|---------------------|------------------------------------------|
+|`production`        |IBM Entitled Registry|`cp.icr.io/cp/datapower/datapower-prod`   |
+|`nonproduction`     |IBM Entitled Registry|`cp.icr.io/cp/datapower/datapower-nonprod`|
+|`developers`        |IBM Entitled Registry|`cp.icr.io/cp/datapower/datapower-deved`  |
+|`developers-limited`|Dockerhub            |`docker.io/ibmcom/datapower`              |
 
 ## Image Pull Secret
 

@@ -3,14 +3,22 @@
     - path: /getting-started
 - title: Install
   pages:
+    - title: Prerequisites
+      path: /install/prereqs
     - title: Installation via OLM
       path: /install/olm
     - title: Installation via CASE
       path: /install/case
+- title: Uninstall
+  pages:
+    - title: Uninstalling
+      path: /uninstall
 - title: APIs
   pages:
     - title: DataPowerService
-      path: /apis/datapowerservice/spec
+      path: /apis/datapowerservice/v1beta2
+    - title: DataPowerMonitor
+      path: /apis/datapowermonitor/v1beta2
 - title: Features
   pages:
     - title: IBM Entitled Registry
@@ -19,6 +27,12 @@
       path: /features/config-mgmt
     - title: Operand Upgrades
       path: /features/operand-upgrade
+    - title: DataPower Monitor
+      path: /features/monitor
+    - title: API Migration
+      path: /features/api-migration
+    - title: Webhooks
+      path: /features/webhooks
 - title: Guides
   pages:
     - title: Migrating from v2018 to v10
@@ -27,12 +41,16 @@
       path: /guides/domain-configuration
     - title: Workload Rollbacks
       path: /guides/workload-rollbacks
+    - title: Operand Status
+      path: /guides/operand-status
+    - title: Exposing Services
+      path: /guides/service-ingress-route
 - title: Troubleshooting
   pages:
     - title: Logging
       path: /troubleshooting/logging
-    - title: DataPowerService Status
-      path: /troubleshooting/check-status
+    - title: MustGather
+      path: /troubleshooting/must-gather
     - title: Stale Webhooks
       path: /troubleshooting/stale-webhooks
     - title: Init Scripts

@@ -1,0 +1,68 @@
+---
+title: Exposing DataPower Services
+description: Guide to building services and ingresses for your DataPower cluster.
+---
+
+<PageDescription>
+
+Users are expected to craft and manage Services and Routes that connect the external internet with their DataPower configurations.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Service management</AnchorLink>
+  <AnchorLink>Service creation</AnchorLink>
+  <AnchorLink>Route creation</AnchorLink>
+  <AnchorLink>Ingress creation</AnchorLink>
+</AnchorLinks>
+
+## Service management
+
+Creation of Services, Routes, and Ingresses serving DataPower configuration must be flexible, as to meet all possible permutations of customer configuration. The DataPower Operator cannot anticipate all possible configurations of Services, Routes and Ingresses needed or desired by users, so definition and management of those objects are left to the owners of the related DataPower configuration.
+
+User created Services, Routes, and Ingresses will not be "owned" by the Operator or the `DataPowerService` Custom Resource with which they are affiliated. This means that, if the Operator or CR is deleted, the Services will remain.
+
+When DataPower configuration is updated for a particular instance, the Services, Routes, and Ingresses **will not** be updated automatically. Users will need to reconfigure these resources before the new configuration is exposed.
+
+## Service creation
+
+Service creation and management for DataPower workloads is no different than [standard Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/).
+
+Writing a yaml for your Service is the recommended method of creating a Service, as it's declarative and can be version controlled. In your Service, you will specify the Ports you want exposed to the Internet. These ports are entirely dependent on your DataPower configuration. To link the Service to your cluster of DataPowers, you will need to provide the correct label selectors. They are defined as:
+```
+apiVersion: v1
+kind: Service
+spec:
+  selector:
+    app.kubernetes.io/component: datapower
+    app.kubernetes.io/instance: <namespace>-<cr-name>
+```
+Where `<cr-name>` is the name of your custom resource and `<namespace>` is the namespace in which DataPower is deployed.
+
+In your service, you will need to specify each port that needs to be exposed to the internet. For example, if a Multi-Protocol Gateway is exposed on port `4545` and an XML Firewall application exposed on `4546`, your Service might look like:
+```
+apiVersion: v1
+kind: Service
+spec:
+  selector:
+    app.kubernetes.io/component: datapower
+    app.kubernetes.io/instance: <namespace>-<cr-name>
+  ports:
+  - protocol: TCP
+    port: 4545
+    targetPort: 4545
+    name: mpgw
+  - protocol: TCP
+    port: 4546
+    targetPort: 4546
+    name: xml
+```
+When either a Route or Ingress is configured to connect via this Service, only the ports `4545` and `4546` will be available to use, all others will not connect.
+
+## Route creation
+
+Route creation should be done in accordance to your Cloud Provider's Route implementation, following [standard OpenShift practices](https://docs.openshift.com/container-platform/4.5/networking/routes/route-configuration.html).
+
+## Ingress creation
+
+Ingress creation should be done in accordance to your Cloud Provider's Ingress implementation, following [standard Kubernetes practices](https://kubernetes.io/docs/concepts/services-networking/ingress/).

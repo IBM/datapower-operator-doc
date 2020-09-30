@@ -1,0 +1,103 @@
+---
+title: Operand Status
+description: Guide for retrieving and understanding the status of deployed operands.
+---
+
+<PageDescription>
+
+Once deployed, an operand's status is available via the Custom Resources that compose the workload.
+
+</PageDescription>
+
+## Operand Custom Resources
+
+The DataPower Operator manages **operands**, e.g. IBM DataPower Gateway pods, through its Custom Resources. The primary Custom Resource is the `DataPowerService` CustomResourceDefinition (CRD). When a `DataPowerService` instance is created, the DataPower Operator will keep its `Status` up-to-date. This `Status` can contain valuable information regarding the workload's state, including the status of an update rollout, any errors during reconciliation, etc.
+
+While the `DataPowerService` instance is the primary instance for checking the status of the IBM DataPower Gateway deployment, the `DataPowerMonitor` instance is also a valuable component. For more details, see [DataPower Monitor](/features/monitor).
+
+## Retrieving status
+
+### DataPowerService
+
+You can interact with the `DataPowerService` resource type similarly to how you would a `Pod` or `Deployment`.
+
+<InlineNotification>
+
+**Note:** The below examples use the `oc` CLI; however, the same commands should work with `kubectl`.
+
+</InlineNotification>
+
+```bash
+# list DataPowerService instances
+oc get datapowerservice
+
+# describe one of them
+oc describe datapowerservice/name
+```
+
+The `DataPowerService` also supports a shortname, `dp`:
+
+```bash
+# list DataPowerService instances
+oc get dp
+
+# describe one of them
+oc describe dp/name
+```
+
+### DataPowerMonitor
+
+You can interact with the `DataPowerMonitor` resource type similarly to the `DataPowerService`.
+
+```bash
+# list DataPowerMonitor instances
+oc get datapowermonitor
+
+# describe one of them
+oc describe datapowermonitor/name
+```
+
+The `DataPowerMonitor` also supports a shortname, `dpm`:
+
+```bash
+# list DataPowerMonitor instances
+oc get dpm
+
+# describe one of them
+oc describe dpm/name
+```
+
+### Categories
+
+All CRDs that the DataPower Operator manages will be included in the following categories, allowing for it to show up in aggregated `get` output:
+
+- `all`
+- `apic`
+- `cp4i`
+- `integration`
+
+To list these categories of resources use `oc get category` where `category` is one of the above.
+
+```bash
+oc get all
+oc get apic
+oc get cp4i
+oc get integration
+```
+
+## Understanding the output
+
+The output from `oc get dp` will show at a glance if the IBM DataPower Gateway instance(s) are `Ready`. For example:
+
+```
+$ oc get dp
+NAME        PHASE     READY   SUMMARY                           VERSION    AGE
+example     Running   True    StatefulSet replicas ready: 3/3   10.0.1.0   171m
+```
+
+Similarly to other Kubernetes resources, you can `describe` the custom resource for more verbose status (as well as to see its `spec`). At the bottom of the `describe` output, you will find the `Status` section. This contains conditions and other custom status entries.
+
+To read more about the available information in the `Status` sections for each CRD, see:
+
+- [DataPowerService Status](/apis/datapowerservice/v1beta2#status)
+- [DataPowerMonitor Status](/apis/datapowermonitor/v1beta2#status)
