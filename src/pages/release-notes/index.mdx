@@ -3,6 +3,14 @@ title: Release Notes
 description: IBM DataPower Operator release notes
 ---
 
+## 1.1.1
+
+- Fixes an issue relating to metering and licensing of DataPower Virtual Edition for Nonproduction, when deployed in IBM Cloud Pak for Integration.
+- Fixes an issue relating to the `storage.size` property rendering in OCP Console UI, as well as IBM Cloud Pak for Integration Platform Navigator.
+- Fixes an issue relating to the name generation and reconciliation of the `username-commands` ConfigMap created by the operator.
+- Adds documentation `links` to the `ClusterServiceVersion` for both CRDs, as well as this documentation website.
+- Conversion webhook management routine will now adopt orphaned webhook deployments if found during reconciliation.
+
 ## 1.1.0
 
 ### v1beta2 APIs
