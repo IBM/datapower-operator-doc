@@ -84,7 +84,13 @@ The `License` property contains two required fields:
   - `developers`
   - `developers-limited`
 
-The `license.use` is used in tandem with the `version` property to determine what DataPower firmware image to pull and use in the deployment.
+The `license.use` is used in tandem with the `version` property to determine what DataPower firmware image to pull and use in the deployment, see [Image selection](/features/entitled-registry#image-selection).
+
+<InlineNotification>
+
+When deploying in IBM Cloud Pak for Integration, only the `production` or `nonproduction` values can be used.
+
+</InlineNotification>
 
 To view the full license terms, you can:
 
@@ -116,14 +122,25 @@ You are also able to lock in a specific version by specifying the full version s
 
 You can view the reconciled and available versions and channels on the `DataPowerService` instance's status, once created.
 
-### Available channels
+### Channels
 
-The table below shows the available channels for this CRD version (`v1beta2`).
+#### Supported
 
-|Channel   |Stream    |Latest    |
-|----------|----------|----------|
-|`10.0-lts`|`10.0.1.x`|`10.0.1.0`|
-|`10.0-cd` |`10.0.0.x`|`10.0.0.1`|
+The table below shows the **supported** channels for this CRD version (`v1beta2`) and operator version (`1.2.x`). Supported channels indicate channels which can be specified by `spec.version` for which this version of the DataPower Operator will understand and reconcile.
+
+|Channel   |Stream    |Latest        |
+|----------|----------|--------------|
+|`10.0-eus`|`10.0.1.x`|`10.0.1.1-eus`|
+|`10.0-lts`|`10.0.1.x`|`10.0.1.1`    |
+|`10.0-cd` |`10.0.0.x`|`10.0.0.1`    |
+
+#### Available
+
+The table below shows the **available** channels for this CRD version (`v1beta2`) and operator version (`1.2.x`). Available channels (and version) are advertised in Cloud Pak for Integration as targets for operand upgrade. To enable and support the Cloud Pak for Integration EUS strategy, version `1.2.x` will only advertise EUS operand channels and versions.
+
+|Channel   |Stream    |Latest        |
+|----------|----------|--------------|
+|`10.0-eus`|`10.0.1.x`|`10.0.1.1-eus`|
 
 ### Example
 
@@ -133,7 +150,7 @@ kind: DataPowerService
 metadata:
   name: example-dpservice
 spec:
-  version: 10.0-lts
+  version: 10.0-eus
 ```
 
 ## `replicas`
@@ -539,19 +556,25 @@ This field applies to both ephemeral and persistent types.
 
 #### `size`
 
-`size` is the size of the persisted volume. The expected format is some form of `#Gi`. For more information on resource definitions, [see Resources doc](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/scheduling/resources.md).
+`size` is the size of the persisted volume. The expected format is some form of `#Gi`. For more information on resource definitions, see Kubernetes [Resources documentation](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/scheduling/resources.md).
 
 This field applies to both ephermeral and persistent types.
 
 #### `class`
 
-`class` is a direct pass through to the `storageClassName` field for the Persistent Volume Claim. It determines which class to use for the volume. [StorageClass doc](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#class-1)
+`class` is a direct pass through to the `storageClassName` field for the Persistent Volume Claim. It determines which class to use for the volume. See Kubernetes [StorageClass documentation](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#class-1) for more details.
 
 This field applies only to the persistent type.
 
 #### `volumeMode`
 
-`volumeMode` is a switch between `Filesystem` and `Block` volume types. Our default type is `Filesystem`. [VolumeMode doc](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#volume-modes)
+<InlineNotification kind="warning">
+
+This field is **deprecated** in `1.2.0`. If set to `Block` previously, the CR will be migrated to use `Filesystem` instead.
+
+</InlineNotification>
+
+If a value for `volumeMode` is provided, it will be overridden and set to `Filesystem` instead. See Kubernetes [VolumeMode documentation](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#volume-modes) for more details.
 
 This field applies only to the persistent type.
 
@@ -574,8 +597,8 @@ storage:
 - type: persistent
   path: /opt/ibm/datapower/drouter/config
   size: 10Gi
-  class: velox-block
-  volumeMode: Block
+  class: some-storage-class
+  volumeMode: Filesystem
   selector:
     matchLabels:
       example.label: some.value

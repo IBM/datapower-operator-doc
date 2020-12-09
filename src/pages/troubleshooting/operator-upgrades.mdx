@@ -9,6 +9,58 @@ If any known issues exist or migration paths are needed to upgrade from one vers
 
 </PageDescription>
 
+# 1.2.0
+
+## Slow Kubernetes garbage collection can cause webhook service creation to fail
+
+### Symptoms
+
+An error may be seen that indicates a webhook `Service` is not found:
+
+```
+failed calling webhook "datapowerservices.defaulter.datapower.ibm.com": Post https://datapower-operator.default.svc:443/default-datapower-ibm-com-v1beta2-datapowerservice?timeout=2s: service "datapower-operator" not found
+```
+
+In the `datapower-operator` pod logs, the following log message is seen indicating the `Service` exists already:
+
+```
+{"level":"info","ts":"2020-10-06T20:32:45.818Z","logger":"setup-webhook","msg":"webhook service found. skip create"}
+```
+
+However, checking for the `Service` object (name `datapower-operator`) in the namespace would show it does not exist:
+
+```
+$ kubectl get svc datapower-operator
+```
+
+### Description
+
+During the DataPower Operator boot the defaulting and validating webhooks are initialized. As part of this process, a `Service` object is created if not found in the cluster. If the Kubernetes garbage collection is slow or delayed it is possible for the `Service` object to have been marked for deletion, but still exist in the namespace for a span of time. If the new DataPower Operator pod attempts to initialize the new `Service` resource during this time window, the operator will continue through the boot sequence without creating a new `Service` instance.
+
+Once the Kubernetes garbage collection catches up, and the `Service` is deleted, no `Service` will remain to expose the webhooks and thus API errors will be seen when invoking the webhooks.
+
+### Solution
+
+To resolve this issue, the DataPower Operator pod can be deleted manually. Once this is done, the Deployment's ReplicaSet controller will spin up a new DataPower Operator pod, which will in turn create the webhook `Service`.
+
+1. Fetch the DataPower Operator pod, taking note of the name (will be the first column in the output).
+
+    ```
+    kubectl [-n namespace] get pod | grep datapower-operator
+    ```
+
+2. Delete the DataPower Operator pod, where `name` is the name of the pod found in Step 5.
+
+    ```
+    kubectl [-n namespace] delete pod/name
+    ```
+
+3. Validate a new pod is created in its place.
+
+    ```
+    kubectl [-n namespace] get pod | grep datapower-operator
+    ```
+
 # 1.1.0
 
 ## Operator lock not released after Leader Pod removed

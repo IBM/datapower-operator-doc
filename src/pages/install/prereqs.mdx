@@ -12,6 +12,7 @@ Ensure your environment meets the following requirements prior to installing the
 <AnchorLinks>
   <AnchorLink>Container environment</AnchorLink>
   <AnchorLink>Resource requirements</AnchorLink>
+  <AnchorLink>Cluster-scope permissions</AnchorLink>
   <AnchorLink>Optional: PodSecurityPolicy</AnchorLink>
   <AnchorLink>Optional: SecurityContextConstraints</AnchorLink>
   <AnchorLink>Optional: Multiple Failure Zones</AnchorLink>
@@ -23,8 +24,8 @@ Ensure your environment meets the following requirements prior to installing the
 
 The DataPower Operator currently supports:
 
-- OpenShift Container Platform (OCP) 4.4+
-- Kubernetes 1.16+
+- OpenShift Container Platform (OCP) 4.6+
+- Kubernetes 1.17+
 
 ### Worker node configuration
 
@@ -55,6 +56,50 @@ For more information on what this spec means, see [Managing Resources for Contai
 - For production high-availability, a minimum of 3 replicas (one per node) are recommended.
 
 See also: [System requirements for IBM DataPower Gateways](https://www.ibm.com/support/pages/node/613133)
+
+## Cluster-scope permissions
+
+The DataPower Operator requires the following cluster-scope permissions. These are brought in by a `ClusterRole` and bound to the operator's `ServiceAccount` via `ClusterRoleBinding`.
+
+Permissions to manage CustomResourceDefinition defaulting and validating webhooks:
+  - API Groups: `admissionregistration.k8s.io`
+  - Resources: `mutatingwebhookconfigurations`, `validatingwebhookconfigurations`
+  - Verbs: `create`, `delete`, `get`, `list`, `patch`, `update`, `watch`
+
+Permissions needed for reconciliation of admission controllers (webhooks):
+  - API Groups: `rbac.authorization.k8s.io`
+  - Resources: `clusterroles`, `clusterrolebindings`
+  - Verbs: `get`, `list`
+
+Permissions needed for management of owned CustomResourceDefinitions:
+  - API Groups: `apiextensions.k8s.io`
+  - Resources: `customresourcedefinitions`
+  - Verbs: `get`, `update`
+
+Permissions needed for management of conversion webhook, which can exist in other namespaces:
+  - API Groups: (none)
+  - Resources: `namespaces`
+  - Verbs: `get`, `list`
+
+Permissions needed for management of conversion webhook, which can exist in other namespaces:
+  - API Groups: (none)
+  - Resources: `services`, `secrets`
+  - Verbs: `create`, `delete`, `get`, `list`, `patch`, `update`, `watch`
+
+Permissions needed for management of conversion webhook, which can exist in other namespaces:
+  - API Groups: `apps`
+  - Resources: `deployments`
+  - Verbs: `create`, `delete`, `get`, `list`, `patch`, `update`, `watch`
+
+Permissions needed for conversion webhook implementation across namespaces:
+  - API Groups: `datapower.ibm.com`
+  - Resources: `*`
+  - Verbs: `create`, `delete`, `get`, `list`, `patch`, `update`, `watch`
+
+Permissions needed for OCP platform related checks:
+  - API Groups: `config.openshift.io`
+  - Resources: `clusterversions`
+  - Verbs: `get`
 
 ## Optional: PodSecurityPolicy
 
