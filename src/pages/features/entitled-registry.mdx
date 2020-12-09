@@ -9,7 +9,7 @@ The DataPower Operator supports automatically pulling IBM DataPower images from 
 
 </PageDescription>
 
-## Image Selection
+## Image selection
 
 When configuring the `DataPowerService` Custom Resource, there are two properties which will determine which image is pulled, and from what container registry:
 
@@ -25,9 +25,19 @@ The `version` property will decide which base firmware version should be used, w
 |`developers`        |IBM Entitled Registry|`cp.icr.io/cp/datapower/datapower-deved`  |
 |`developers-limited`|Dockerhub            |`docker.io/ibmcom/datapower`              |
 
+<InlineNotification>
+
+When deploying within IBM Cloud Pak for Integration, the image location is always `cp.icr.io/cp/datapower/datapower-cp4i`.
+
+For more details regarding this image, see [Cloud Pak for Integration: Gateway runtime](https://www.ibm.com/support/knowledgecenter/SS9H2Y_10.0/com.ibm.dp.doc/icp4i.html).
+
+</InlineNotification>
+
 ## Image Pull Secret
 
 If the IBM DataPower image is to be pulled from the IBM Entitled Registry, an Entitlement Key must be provided as an Image Pull Secret. You can obtain an Entitlement Key from [My IBM](https://myibm.ibm.com/products-services/containerlibrary).
+
+If the operator detects an `ibm-entitlement-key` Secret in the same namespace as the `DataPowerService` Custom Resource, the operator will automatically use this Secret to pull the IBM DataPower images. You do not need to manually add this secret to your `DataPowerService` CR spec.
 
 ### Creating the Secret
 

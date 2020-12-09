@@ -45,6 +45,8 @@
       path: /guides/operand-status
     - title: Exposing Services
       path: /guides/service-ingress-route
+    - title: Operator Rollbacks
+      path: /guides/operator-rollbacks
 - title: Troubleshooting
   pages:
     - title: Logging

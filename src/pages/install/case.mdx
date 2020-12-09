@@ -39,14 +39,17 @@ Available datapowerOperator actions, in the order they would typically be run:
 
 <AnchorLinks small>
   <AnchorLink>1. configure-creds-airgap</AnchorLink>
-  <AnchorLink>2. mirror-images</AnchorLink>
-  <AnchorLink>3. configure-cluster-airgap</AnchorLink>
-  <AnchorLink>4. install-catalog</AnchorLink>
-  <AnchorLink>5. install-operator</AnchorLink>
-  <AnchorLink>6. uninstall-operator</AnchorLink>
-  <AnchorLink>7. uninstall-catalog</AnchorLink>
-  <AnchorLink>8. install-operator-native</AnchorLink>
-  <AnchorLink>9. uninstall-operator-native</AnchorLink>
+  <AnchorLink>2. init-registry</AnchorLink>
+  <AnchorLink>3. start-registry</AnchorLink>
+  <AnchorLink>4. mirror-images</AnchorLink>
+  <AnchorLink>5. stop-registry</AnchorLink>
+  <AnchorLink>6. configure-cluster-airgap</AnchorLink>
+  <AnchorLink>7. install-catalog</AnchorLink>
+  <AnchorLink>8. install-operator</AnchorLink>
+  <AnchorLink>9. uninstall-operator</AnchorLink>
+  <AnchorLink>10. uninstall-catalog</AnchorLink>
+  <AnchorLink>11. install-operator-native</AnchorLink>
+  <AnchorLink>12. uninstall-operator-native</AnchorLink>
 </AnchorLinks>
 
 ## 1. `configure-creds-airgap`
@@ -54,6 +57,13 @@ Available datapowerOperator actions, in the order they would typically be run:
 Configure credentials for airgap installation.
 
 Run this action to save the credentials needed for the target and source container image registries. This command will be run twice, once for the source and once for the target.
+
+### Arguments
+```
+--registry               : source/target container image registry (required)
+--user                   : login user name for the container image registry (required)
+--pass                   : login password for the container image registry (required)
+```
 
 ### Example
 
@@ -79,11 +89,70 @@ Where:
 - `$SOURCE_REGISTRY_USER` and `$TARGET_REGISTRY_USER` are the usernames for the respective registries.
 - `$SOURCE_REGISTRY_PASS` and `$TARGET_REGISTRY_PASS` are the passwords for the respective registries.
 
-## 2. `mirror-images`
+## 2. `init-registry`
+
+Initialize a Docker registry locally.
+
+This action will setup a Docker registry on your localhost. This is intended to be used as a staging area for image-mirroring before physically migrating the registry behind your firewall.
+
+### Arguments
+```
+--user                   : login user name for the container image registry
+--pass                   : login password for the container image registry
+--dir                    : local directory for the docker registry (default: /tmp/docker-registry)
+--subject                : self-sign TLS certificate subject
+--registry               : IP or FQDN for the docker registry ( default: $(hostname -f))
+--clean                  : clean up all existing repositories data
+```
+
+### Example
+```
+cloudctl case launch \
+  --case /path/to/case \
+  --namespace my-namespace \
+  --inventory datapowerOperator \
+  --action init-registry \
+  --args "[args]"
+```
+
+## 3. `start-registry`
+
+Start a local Docker registry.
+
+This action starts the Docker registry created by `init-registry`.
+
+### Arguments
+```
+--port                   : registry service port (default: 5000 )
+--dir                    : local directory for the docker registry (default: /tmp/docker-registry)
+--engine                 : container engine to run the container (docker or podman)
+--image                  : docker registry image (default: docker.io/library/registry:2.6)
+```
+
+### Example
+```
+cloudctl case launch \
+  --case /path/to/case \
+  --namespace my-namespace \
+  --inventory datapowerOperator \
+  --action start-registry \
+  --args "[args]"
+```
+
+## 4. `mirror-images`
 
 Mirror images from a public source repository to an internal target repository.
 
 Run this action to copy all images required by the CASE from their original source registries into your internal registry. All images copied in this way will maintain their namespace/registry path. For example, mirroring `docker.io/ibmcom/datapower:10.0.0.0` to `my-registry.io` will result in the image `my-registry.io/ibmcom/datapower:10.0.0.0`.
+
+### Arguments
+```
+--dryRun                 : print the actions that would be taken and exit without writing to the destinations
+--inputDir               : path to saved CASE directory (required)
+--fromRegistry           : override the source image registry in the CASE
+--registry               : target container image registry (required)
+--chunks                 : mirror the images in batches with a given size. Default is 100
+```
 
 ### Example
 ```
@@ -96,11 +165,33 @@ cloudctl case launch \
 ```
 Where `$TARGET_REGISTRY` is the URL of the internal mirroring image registry.
 
-## 3. `configure-cluster-airgap`
+## 5. `stop-registry`
+
+Stop a local Docker registry.
+
+This action stops the Docker registry started by `start-registry`. Run this action only after you've completed the mirroring process.
+
+### Example
+```
+cloudctl case launch \
+  --case /path/to/case \
+  --namespace my-namespace \
+  --inventory datapowerOperator \
+  --action stop-registry
+```
+
+## 6. `configure-cluster-airgap`
 
 Configure cluster to utilize mirrored image registry.
 
 This command deploys an [ImageContentSourcePolicy](https://docs.openshift.com/container-platform/4.5/openshift_images/image-configuration.html#images-configuration-registry-mirror_image-configuration) that redirects image pull requests of Pods from their original source to the internal target registry.
+
+### Arguments
+```
+--dryRun                 : print the actions that would be taken and exit without writing to the destinations
+--inputDir               : path to saved CASE directory
+--registry               : target container image registry (required)
+```
 
 ### Example
 ```
@@ -112,7 +203,7 @@ cloudctl case launch \
   --args "--registry $TARGET_REGISTRY --inputDir /tmp/cases"
 ```
 
-## 4. `install-catalog`
+## 7. `install-catalog`
 
 Install the CatalogSource object to your cluster.
 
@@ -125,6 +216,12 @@ This action must be taken prior to `install-operator`.
 </InlineNotification>
 
 ### Arguments
+```
+--dryRun                 : print the actions that would be taken and exit without writing to the destinations
+--registry               : target container image registry
+--recursive              : recursively install dependent catalogs
+--inputDir               : path to saved CASE directory ( required if --recurse is set)
+```
 
 #### `--registry`
 
@@ -140,11 +237,21 @@ cloudctl case launch \
   --args "--registry $TARGET_REGISTRY"
 ```
 
-## 5. `install-operator`
+## 8. `install-operator`
 
 Install the Operator via OLM Subscription.
 
 This command installs the DataPower Operator by way of OLM Subscription. A Subscription yaml is applied to the cluster in the namespace provided. If an OperatorGroup is not already present, one will be created.
+
+### Arguments
+```
+--dryRun                 : print the actions that would be taken and exit without writing to the destinations
+--channelName            : name of channel for subscription (packagemanifest default used if not specified)
+--secret                 : name of existing image pull secret for the container image registry
+--registry               : container image registry (required if pass|user specified)
+--user                   : login user name for the container image registry (required if registry|pass specified)
+--pass                   : login password for the container image registry (required if registry|user specified)
+```
 
 ### Example
 ```
@@ -155,7 +262,7 @@ cloudctl case launch \
   --action install-operator
 ```
 
-## 6. `uninstall-operator`
+## 9. `uninstall-operator`
 
 Uninstall the Operator OLM Subscription.
 
@@ -167,6 +274,11 @@ All Operator Subscriptions **should** be uninstalled before uninstalling the Cat
 
 </InlineNotification>
 
+### Arguments
+```
+--dryRun                 : print the actions that would be taken and exit without writing to the destinations
+```
+
 ### Example
 ```
 cloudctl case launch \
@@ -176,11 +288,18 @@ cloudctl case launch \
   --action uninstall-operator
 ```
 
-## 7. `uninstall-catalog`
+## 10. `uninstall-catalog`
 
 Uninstall the Operator CatalogSource.
 
 This command removes the CatalogSource from the cluster.
+
+### Arguments
+```
+--dryRun                 : print the actions that would be taken and exit without writing to the destinations
+--recursive              : recursively install dependent catalogs
+--inputDir               : path to saved CASE directory ( required if --recurse is set)
+```
 
 ### Example
 
@@ -192,11 +311,21 @@ cloudctl case launch \
   --action uninstall-catalog
 ```
 
-## 8. `install-operator-native`
+## 11. `install-operator-native`
 
 Install the Operator using standard Kubernetes resources.
 
 This command deploys the DataPower Operator using standard Kubernetes resources, namely Deployment. Installing this way will not benefit from any of OLM's functionality.
+
+### Arguments
+```
+--secret                 : name of existing image pull secret for the container image registry
+--registry               : container image registry (required if pass|user specified)
+--user                   : login user name for the container image registry (required if pass specified)
+--pass                   : login password for the container image registry (required if user specified)
+--recursive              : recursively install dependent catalogs
+--inputDir               : path to saved CASE directory ( required if --recurse is set)
+```
 
 ### Example
 
@@ -208,9 +337,16 @@ cloudctl case launch \
   --action install-operator-native
 ```
 
-## 9. `uninstall-operator-native`
+## 12. `uninstall-operator-native`
 
 Uninstall DataPower Operator which was installed using native Kubernetes resources.
+
+### Arguments
+```
+--deleteCRDs             : deletes CRD's associated with this operator (if not set, crds won't get deleted)
+--recursive              : recursively install dependent catalogs
+--inputDir               : path to saved CASE directory ( required if --recurse is set)
+```
 
 ### Example
 
