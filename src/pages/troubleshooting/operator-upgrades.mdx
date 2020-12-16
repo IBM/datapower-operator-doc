@@ -11,6 +11,42 @@ If any known issues exist or migration paths are needed to upgrade from one vers
 
 # 1.2.0
 
+## Pod Topology Spread Constraints
+
+### Symptoms
+
+DataPower Operator pods fail to schedule, stating that no nodes match pod topology spread constraints (missing required label).
+
+```
+0/15 nodes are available: 12 node(s) didn't match pod topology spread constraints (missing required label), 3 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate.
+```
+
+### Description
+
+There was a [Kubernetes bug](https://github.com/kubernetes/kubernetes/issues/95808) that allowed for pods to schedule when `topologyKey` was not matched. Kubernetes recently fixed this bug in 1.20, and back-ported the fix to 1.18 and 1.19.
+
+Once this fix is installed to a Kubernetes cluster, the scheduler would no longer schedule DataPower Operator pods, due to the `topologyKey` in our pod spec not using a well-known "zone" label.
+
+### Solution
+
+<InlineNotification>
+
+We have fixed this issue in DataPower Operator version `1.2.1`, see [Release notes](/release-notes#1.2.1).
+
+</InlineNotification>
+
+Performing a clean installation of DataPower Operator version `1.2.1` or higher should succeed without the below workaround needed. However, if you previously tried to upgrade to `1.2.0` and the upgrade is stuck in a pending state, the following workaround can be used to allow the `1.2.0` install to complete.
+
+Manually add a `zone` label (with any value) to one of the worker nodes in the Kubernetes cluster. The DataPower Operator pods will then be scheduled to that worker node.
+
+```
+kubectl label nodes <node-name> zone=<label-value>
+```
+
+Reference: [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#step-one-attach-label-to-the-node)
+
+Optionally, once a successful upgrade to `1.2.1` has been completed, the `zone` label can be removed from the node(s) in the cluster. This `zone` label is no longer used in `1.2.1` or higher.
+
 ## Slow Kubernetes garbage collection can cause webhook service creation to fail
 
 ### Symptoms
