@@ -3,6 +3,12 @@ title: Release Notes
 description: IBM DataPower Operator release notes
 ---
 
+## 1.2.1
+
+- Fix Pod Topology Spread Constraints.
+  - Set `topologyKey` to well-known "zone" label `topology.kubernetes.io/zone`.
+  - Set `whenUnsatisfiable` to `ScheduleAnyway` to avoid blocked scheduling.
+
 ## 1.2.0
 
 ### Enhancements
