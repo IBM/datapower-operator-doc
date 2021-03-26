@@ -44,6 +44,8 @@ The `DataPowerService` is a Custom Resource Definition used to deploy and manage
 |`labels`             |Custom labels to apply to Pods                                      |No      |None         |
 |`tolerations`        |Toleration settings to apply when scheduling DataPower Pods         |No      |None         |
 |`nodeSelector`       |NodeSelector key-value pairs to match when scheduling DataPower Pods|No      |None         |
+|`lifecycle`          |Container lifecycle hook to be executed                             |No      |None         |
+|`podAutoScaling`     |Pod autoscaling settings used by horizontal or vertical scaling     |No      |None         |
 
 <AnchorLinks small>
   <AnchorLink>license</AnchorLink>
@@ -69,13 +71,15 @@ The `DataPowerService` is a Custom Resource Definition used to deploy and manage
   <AnchorLink>labels</AnchorLink>
   <AnchorLink>tolerations</AnchorLink>
   <AnchorLink>nodeSelector</AnchorLink>
+  <AnchorLink>lifecycle</AnchorLink>
+  <AnchorLink>podAutoScaling</AnchorLink>
 </AnchorLinks>
 
 ## `license`
 
 ### Description
 
-The `License` property contains two required fields:
+The `License` property contains three required fields:
 
 - `accept`: must be boolean `true` for the DataPower pod(s) to start successfully. This property directly sets the DataPower `DATAPOWER_LICENSE_ACCEPT` environment variable in pods, which acknowledges the license acceptance.
 - `use`: the license use. Can be one of the following values:
@@ -83,6 +87,7 @@ The `License` property contains two required fields:
   - `nonproduction`
   - `developers`
   - `developers-limited`
+- `license`: the license ID. For possible values, see [licenses](/guides/licenses).
 
 The `license.use` is used in tandem with the `version` property to determine what DataPower firmware image to pull and use in the deployment, see [Image selection](/features/entitled-registry#image-selection).
 
@@ -101,14 +106,16 @@ docker run --rm <image> --show-license
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
 spec:
+  version: 10.0-lts
   license:
     accept: true
     use: production
+    license: L-RJON-BXENBR
   ...
 ```
 
@@ -126,31 +133,31 @@ You can view the reconciled and available versions and channels on the `DataPowe
 
 #### Supported
 
-The table below shows the **supported** channels for this CRD version (`v1beta2`) and operator version (`1.2.x`). Supported channels indicate channels which can be specified by `spec.version` for which this version of the DataPower Operator will understand and reconcile.
+The table below shows the **supported** channels for this CRD version (`v1beta3`) and operator version (`1.3.x`). Supported channels indicate channels which can be specified by `spec.version` for which this version of the DataPower Operator will understand and reconcile.
 
 |Channel   |Stream    |Latest        |
 |----------|----------|--------------|
-|`10.0-eus`|`10.0.1.x`|`10.0.1.2-eus`|
 |`10.0-lts`|`10.0.1.x`|`10.0.1.2`    |
-|`10.0-cd` |`10.0.0.x`|`10.0.0.1`    |
+|`10.0-cd` |`10.0.x.y`|`10.0.2.0`    |
 
 #### Available
 
-The table below shows the **available** channels for this CRD version (`v1beta2`) and operator version (`1.2.x`). Available channels (and version) are advertised in Cloud Pak for Integration as targets for operand upgrade. To enable and support the Cloud Pak for Integration EUS strategy, version `1.2.x` will only advertise EUS operand channels and versions.
+The table below shows the **available** channels for this CRD version (`v1beta3`) and operator version (`1.3.x`). Available channels (and version) are advertised in Cloud Pak for Integration as targets for operand upgrade. To enable and support the Cloud Pak for Integration EUS strategy, version `1.2.x` will only advertise EUS operand channels and versions.
 
 |Channel   |Stream    |Latest        |
 |----------|----------|--------------|
-|`10.0-eus`|`10.0.1.x`|`10.0.1.2-eus`|
+|`10.0-lts`|`10.0.1.x`|`10.0.1.2`    |
+|`10.0-cd` |`10.0.x.y`|`10.0.2.0`    |
 
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
 spec:
-  version: 10.0-eus
+  version: 10.0-cd
 ```
 
 ## `replicas`
@@ -162,7 +169,7 @@ The `replicas` property is an integer that directly sets the `replicas` field on
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -186,7 +193,7 @@ The `image` property allows for a custom built DataPower Docker image to be used
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -200,12 +207,12 @@ spec:
 
 ### Description
 
-The `imagePullSecrets` property specifies the name of Kubernetes `Secret` objects in the cluster which will provide the Docker registry credentials to pull any images needed during reconciliation and deployment.
+The `imagePullSecrets` property specifies the name(s) of Kubernetes `Secret` objects in the cluster which will provide the Docker registry credentials to pull any images needed during reconciliation and deployment. The Secrets must exist in the same namespace as the DataPowerService.
 
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -215,6 +222,12 @@ spec:
   - datapower-cred-two
   ...
 ```
+
+<InlineNotification>
+
+Note: If you do not specify the name of a Secret object, then the operator will look for one named `ibm-entitlement-key`. This is typically the method used to provide the Entitlement Key for pulling images from the IBM Entitled Registry. For more information, see [Entitled Registry](/features/entitled-registry#image-pull-secret).
+
+</InlineNotification>
 
 ## `users`
 
@@ -249,7 +262,7 @@ For more information, read the Kubernetes documentation on [Secrets](https://kub
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -280,7 +293,7 @@ For an in-depth look at utilizing this property, please see [Domain Configuratio
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -323,7 +336,7 @@ The `env` property allows you to set custom environment variables that will be s
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -345,7 +358,7 @@ This property can be used in conjunction with the `extraExe` property to run cus
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -367,7 +380,7 @@ This property can be used in conjunction with the `initCmds` property to run cus
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -394,7 +407,7 @@ The `debug` property is a user toggleable debugging utility. If not set, it will
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -406,22 +419,37 @@ spec:
 
 ### Description
 
-The `resources` property specifies the desired resources to allocate to the DataPower containers in the statefulset. It is worth noting that you can only request CPU, there is not a limit field, as the DataPower Operator will set:
+The `resources` property specifies the desired resources to allocate to the DataPower containers in the StatefulSet.
+
+### CPU
+
+The CPU request must be specific in whole core count, but can take the form of an integer (`1`) or string (`1000m`) following [Kubernetes resource quantity](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes) formatting.
+
+The following constraints and defaults apply to CPU:
+
+- Minimum cores requested must be `1` or `1000m`
+- Partial CPU values (such as `1500m`) are **not** supported
+- The default CPU request for nonproduction is `1` or `1000m`
+- The default CPU request for production is `4` or `4000m`
+
+It is worth noting that you can only request CPU, there is not a limit field, as the DataPower Operator will set:
 
 ```
 DATAPOWER_WORKER_THREADS == container.limits.cpu == container.requests.cpu
 ```
 
-Thus, when you define the CPU request, all of the above three values will get that value in the statefulset. This ensures best practices are followed in the DataPower runtime statefulset.
+Thus, when you define the CPU request, all of the above three values will get that value in the StatefulSet. This ensures best practices are followed in the DataPower runtime StatefulSet.
 
-You are still able to set both requests and limits for memory. In both cases (`cpu` and `memory`) the values must follow Kubernetes formatting constraints.
+### Memory
 
-If this field is not provided, or parts of the `resources` object are left unset, the example below shows the default value(s) that will be used.
+You are able to set both requests and limits for memory. In both cases (`cpu` and `memory`) the values must follow Kubernetes formatting constraints.
+
+If this field is not provided, or parts of the `resources` object are left unset, the example below shows the default value(s) that will be used (for a production deployment):
 
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -494,7 +522,7 @@ In addition to the above example, it's worth reviewing Kubernetes documentation 
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -631,7 +659,7 @@ If no value is provided, a minimal Service Account will be generated for use by 
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -662,7 +690,7 @@ Optional:
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -708,7 +736,7 @@ The `annotations` field serves as a pass-through for Pod annotations. Users can 
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -726,7 +754,7 @@ The `labels` field serves as a pass-through for Pod labels. Users can add any la
 ### Example
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -746,7 +774,7 @@ The `Tolerations` field allows users to select which nodes DataPower Pods can be
 The following tolerations allow DataPower Pods to be scheduled on nodes tainted with `host=dp:NoSchedule`.
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
@@ -769,13 +797,107 @@ The `NodeSelector` field allows users to specify a set of key value pair that mu
 The following illustrates how to schedule DataPower Pods only on nodes labeled `hostType=gateway`.
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example-dpservice
 spec:
   nodeSelector:
     hostType: gateway
+```
+
+## `lifecycle`
+
+### Description
+
+`lifecycle` allows scripts to be executed after starting and before stopping DataPower container. For more details on container lifecycle hooks, please refer to [Kubernetes documentation](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/).
+
+## `podAutoScaling`
+
+### Description
+
+The `PodAutoScaling` has a group of fields to setup automatic scaling of DataPower pods. Users can enable either horizontal or vertical pod autoscaling and specify corresponding settings here.
+
+### `method`
+
+Method specifies the autoscaling method to be enabled. Since it is not possible to use both horizontal and vertical pod scaling simultaneously, one must pick either `HPA` (for horizontal scaling) or `VPA` (for vertical scaling) as scaling method. To disable pod autoscaling, specify `None` for method, or remove the `podAutoScaling` spec entirely.
+
+<InlineNotification>
+
+Prior to enabling `VPA`, ensure that the [installation prerequisites](/install/prereqs#optional:-vertical-pod-autoscaler) have been met.
+
+</InlineNotification>
+
+### `hpa`
+
+`hpa` groups the fields used by Horizontal Pod Autoscaler.
+
+#### `targetCPUUtilizationPercentage`
+
+When scaling horizontally on CPU usage, one can specify the target CPU utilization. This is represented as a percent value. For more details on how this value is used to calculate the number of pods, please see [Horizontal Pod Autoscaling](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
+When this value is set to 0, CPU usage will not be used as a metric for horizontal scaling.
+
+#### `targetMemoryUtilizationPercentage`
+
+When scaling horizontally on memory usage, this field specifies the target memory utilization for pods. This is represented as a percent value. Pods will be created or deleted when memory utilization exceeds or falls below this value.
+When this value is set to 0, memory usage will not be used as a metric for horizontal scaling.
+
+#### `maxReplicas`
+
+This provides a ceiling on the total number of pods when scaling up. Horizontal pod autoscaler will stop adding new pods when this limit is reached.
+
+#### `minReplicas`
+
+This provides the floor on the total number of pods when scaling down. Horizontal pod autoscaler will stop removing pods once this count is reached. The value for `maxReplicas` must be greater than `minReplicas`. When omitted, default value of 1 is used. It is recommended to use the same value for both `replicas` and `minReplicas` but not necessary. `replicas` is used by HPA only for updating the desired number of pods while scaling up or down.
+
+#### Example
+
+The following illustrates how to enable horiontal pod autoscaling (HPA).
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta3
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  podAutoScaling:
+    method: HPA
+    hpa:
+      targetCPUUtilizationPercentage: 90
+      targetMemoryUtilizationPercentage: 80
+      maxReplicas: 6
+      minReplicas: 1
+```
+
+### `vpa`
+
+`vpa` groups the fields used by Vertical Pod Autoscaler.
+
+#### `maxAllowedCPU`
+
+When scaling vertically on CPU usage, this field provides the maximum limit for CPU that can be assigned to a pod. Vertical pod autoscaler will not increase the CPU limit for the pod beyond this value, even if current usage warrants it.
+If this value is 0 or not specified, CPU will not be used as a metric for vertical scaling.
+
+#### `maxAllowedMemory`
+
+This field provides the maximum memory limit to be adhered when vertically scaling on memory. Vertical pod autoscaler will not increase the memory limit on a pod beyond this value even if workload requires more memory.
+When this value is omitted or set to 0, memory will not be used as a metric for vertical scaling.
+
+#### Example
+
+The following illustrates how to use vertical pod autoscaling (VPA)
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta3
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  podAutoScaling:
+    method: VPA
+    vpa:
+      maxAllowedCPU: 8
+      maxAllowedMemory: 16Gi
 ```
 
 # Status
@@ -815,15 +937,7 @@ Status:
     dpservice-2
   Phase:  Running
   Versions:
-    Available:
-      Channels:
-        Name:  10.0-lts
-        Name:  10.0-cd
-      Versions:
-        Name:    10.0.1.0
-        Name:    10.0.0.1
-        Name:    10.0.0.0
-    Reconciled:  10.0.1.0
+    ...
 ```
 
 ## Conditions
@@ -833,6 +947,7 @@ The `DataPowerService` supports Kubernetes [Conditions](https://github.com/kuber
 - The `Pending` condition will be set `True` when the `DataPowerService` is first created and is reconciling the desired StatefulSet. Once the `StatefulSet` is created and `Ready`, this `Pending` condition will be removed.
 - The `Ready` condition will be set `True` when all of the Pods in the StatefulSet are `Ready`, and the number of replicas in the StatefulSet matches the desired number of replicas set by the `DataPowerService` instance spec.
 - The `Error` condition will be set `True` when an error is encountered during reconciliation of the `DataPowerService`. The `Reason` and `Message` should have details regarding what the error may have been, such as a referenced ConfigMap not being found.
+- The `Warning` condition will be set `True` when a warning is generated during reconciliation of the `DataPowerService`. As with `Error`, the `Reason` and `Message` should provide details on the warning. An example warning would be that an update is available in the channel specified by `spec.version`, but the `spec.license.license` property has not been updated to reflect the new license.
 
 ## Custom Images
 
@@ -867,3 +982,48 @@ The `Versions` status provides information about the currently reconciled versio
 A channel, such as `10.0-lts`, allows for a user to subscribe to a stream of releases. When initially deployed with the `version` property in the CR spec set to a channel, the operator will automatically install the latest available version within that channel. When new versions are released in that channel, the operands (CR instances) will automatically be upgraded by the operator.
 
 The currently reconciled version will always be available in `status.versions.reconciled`, even if the `version` specified in the CR spec is a channel.
+
+### Licenses
+
+The `Versions` status also includes license metadata for each version. This metadata is useful for understanding which license ID to use for `spec.license.license` when choosing a version to upgrade to, for example.
+
+The below snippet shows an example of what this object looks like. Each DataPower version offers two different licenses. The value of `matchesCurrentType` indicates if that particular license matches the currently deployed operand (based on `spec.license.use`).
+
+```yaml
+status:
+  versions:
+    available:
+      channels:
+      - licenses:
+        - displayName: IBM DataPower Gateway Virtual Edition v10.0.1.2
+          link: https://ibm.biz/BdfE2Y
+          matchesCurrentType: false
+          name: L-RJON-BXENBR
+        - displayName: IBM DataPower Gateway for Developers For Docker v10.0.1.2
+          link: https://ibm.biz/BdfHUi
+          matchesCurrentType: true
+          name: L-RJON-BXENED
+        name: 10.0-lts
+      - licenses:
+        - displayName: IBM DataPower Gateway Virtual Edition v10.0.2.0
+          link: https://ibm.biz/BdfsR9
+          matchesCurrentType: false
+          name: L-RJON-BYDR3Q
+        - displayName: IBM DataPower Gateway for Developers For Docker v10.0.2.0
+          link: https://ibm.biz/BdfsRC
+          matchesCurrentType: true
+          name: L-RJON-BYDQZF
+        name: 10.0-cd
+      versions:
+      - licenses:
+        - displayName: IBM DataPower Gateway Virtual Edition v10.0.2.0
+          link: https://ibm.biz/BdfsR9
+          matchesCurrentType: false
+          name: L-RJON-BYDR3Q
+        - displayName: IBM DataPower Gateway for Developers For Docker v10.0.2.0
+          link: https://ibm.biz/BdfsRC
+          matchesCurrentType: true
+          name: L-RJON-BYDQZF
+        name: 10.0.2.0
+      ...
+```

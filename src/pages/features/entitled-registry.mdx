@@ -35,15 +35,22 @@ For more details regarding this image, see [Cloud Pak for Integration: Gateway r
 
 ## Image Pull Secret
 
-If the IBM DataPower image is to be pulled from the IBM Entitled Registry, an Entitlement Key must be provided as an Image Pull Secret. You can obtain an Entitlement Key from [My IBM](https://myibm.ibm.com/products-services/containerlibrary).
+If the IBM DataPower image is to be pulled from the IBM Entitled Registry, an Entitlement Key must be used as an Image Pull Secret. You can obtain an Entitlement Key from [My IBM](https://myibm.ibm.com/products-services/containerlibrary).
 
-If the operator detects an `ibm-entitlement-key` Secret in the same namespace as the `DataPowerService` Custom Resource, the operator will automatically use this Secret to pull the IBM DataPower images. You do not need to manually add this secret to your `DataPowerService` CR spec.
+## Default Image Pull Secret
 
-### Creating the Secret
+If you do not specify an Image Pull Secret in your DataPowerService Custom Resource `spec`, then the operator will look for a Secret named `ibm-entitlement-key` in the same namespace as the DataPowerService, and it will use this Secret to pull the IBM DataPower images. This is typically the method used to provide the Entitlement Key.
 
-For the DataPower Operator to automatically consume your Entitlement Key, you must create a `Secret` in the same namespace as the `DataPowerService` Custom Resource.
+If you want to use your own Entitlement Key, then you can create it.
 
-1. Use `ibm-entitlement-key` as the name of the Secret
+- If you create it with the name `ibm-entitlement-key` in the same namespace as the DataPowerService, then you do not need to explicitly name it as the Image Pull Secret in your DataPowerService Custom Resource `spec`, because the operator will find it automatically.
+- If you create it with a different name, then you must explicitly name it as the Image Pull Secret in your `DataPowerService` Custom Resource spec, see [imagePullSecrets](/apis/datapowerservice/v1beta3#imagepullsecrets).
+
+## Creating the Secret
+
+If you want to create your own Entitlement Key as a Secret, you must create it in the same namespace as the DataPowerService.
+
+1. We recommend that you use the name ibm-entitlement-key
 2. Use `cp` as the username
 3. Use your Entitlement Key as the password
 4. Use `cp.icr.io` as the Docker server

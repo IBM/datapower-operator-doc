@@ -44,15 +44,19 @@ This change could also be applied via `oc edit` or by `oc apply` with the approp
 The DataPower Operator supports automatically upgrading the DataPower pods when new versions are available. To subscribe to an upgrade channel, specify an available channel name as the `version` in the `DataPowerService` CR spec. For example:
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example
 spec:
-  version: 10.0.0
+  version: 10.0-lts
 ```
 
-In the above example, the DataPower Operator will automatically apply the latest version when the CR is created. When a new version becomes available within that channel (i.e. `10.0.0.x`), the operator will automatically reconcile the new version, using the same Upgrade Strategy as above (rolling update).
+In the above example, the DataPower Operator will automatically apply the latest version when the CR is created. When a new version becomes available within that channel (i.e. `10.0.1.x`), the operator will automatically reconcile the new version, using the same Upgrade Strategy as above (rolling update).
+
+## Accepting the license on upgrade
+
+As of version `1.3.0` (and the `v1beta3` API), the `spec.license.license` field must be updated for the automatic upgrade to complete. See [licenses](/guides/licenses) for more details.
 
 ## Checking the Reconciled Version
 
