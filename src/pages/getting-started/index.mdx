@@ -30,19 +30,16 @@ The `DataPowerService` is a CustomResourceDefinition exposed by the IBM DataPowe
 Below is a brief example of what a minimal `DataPowerService` may look like:
 
 ```yaml
-apiVersion: datapower.ibm.com/v1beta2
+apiVersion: datapower.ibm.com/v1beta3
 kind: DataPowerService
 metadata:
   name: example
-  labels:
-    app.kubernetes.io/instance: example
-    app.kubernetes.io/name: example
-    app.kubernetes.io/managed-by: datapower-operator
 spec:
   license:
     accept: true
     use: developers-limited
-  version: 10.0-lts
+    license: L-RJON-BYDQZF
+  version: 10.0-cd
   replicas: 3
   users:
   - name: admin
@@ -50,7 +47,7 @@ spec:
     accessLevel: privileged
 ```
 
-The above Custom Resource would be translated to a StatefulSet with 3 replicas of `developers-limited` licensed IBM DataPower Pods (pulled from [ibmcom/datapower](https://hub.docker.com/r/ibmcom/datapower/)), each running the latest `10.0.0.x` fix-pack.
+The above Custom Resource would be translated to a StatefulSet with 3 replicas of `developers-limited` licensed IBM DataPower Pods (pulled from [ibmcom/datapower](https://hub.docker.com/r/ibmcom/datapower/)), each running the latest `10.0` Continuous Delivery release.
 
 For more details, see the complete `DataPowerService` API [documentation](/apis/datapowerservice/spec).
 

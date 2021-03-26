@@ -1,0 +1,98 @@
+---
+title: Autoscaling DataPower Pods
+description: Automatically scale DataPower Pods
+---
+
+<PageDescription>
+
+The DataPower Operator supports both Horizontal and Vertical pod autoscalers to scale DataPower pods based on memory and CPU.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Background</AnchorLink>
+  <AnchorLink>Horizontal Pod Autoscaling (HPA)</AnchorLink>
+  <AnchorLink>Vertical Pod Autoscaling (VPA)</AnchorLink>
+  <AnchorLink>Details</AnchorLink>
+  <AnchorLink>Managed resources</AnchorLink>
+  <AnchorLink>External autoscalers</AnchorLink>
+</AnchorLinks>
+
+## Background
+
+Pod autoscaling is a very common way of optimizing resource utilization in a Kubernetes cluster. There are two ways of autoscaling.
+
+### Horizontal Pod Autoscaling (HPA)
+
+In this method, pods are added or removed based on current resource utilization. For e.g when average memory utilization across existing pods is above certain level say 90%, horizontal scaling will add new pods in order to bring down the average utilization to the target value 90%. Similarly, when resource utilization is lower than the target, pods will be removed in order to bring the utilization back up to target level. For more information on how horizontal pod autscaling works, please look at [Horizontal Pod Autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
+
+### Vertical Pod Autoscaling (VPA)
+
+This method of scaling does not affect the number of pods. Instead, it affects the resources made available to existing pods. For e.g when a pod is consuming all of its current memory limit, vertical scaling will automatically increase the limit. Similarly, if the pod is not using much of its resource limit, it will automatically decrease the limit for the pods and thus freeing up those unused resources. For more information on how vertical pod autosaling works, please look at [Vertical Pod Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler).
+
+## Details
+
+DataPower Operator is adding support for HPA and VPA by exposing a limited set of fields in DataPowerService custom resource. Please see the [API docs](/apis/datapowerservice/v1beta3#podautoscaling) for specific details on these fields. CPU and memory are the only metrics currently supported for scaling.
+
+Due to a limitation on VPA, one cannot enable both HPA and VPA simultaneously in a cluster. Hence, users are required to choose a scaling method by specifying `podAutoScaling.method` field to either HPA or VPA. Pod auto scaling can be disabled by either removing `podAutoscaling` group from DataPowerService custom resource or by setting `podAutoScaling.method` to `None`.
+
+One can choose to enable scaling on memory or CPU or both. This is controlled by the settings for HPA and VPA as explained below.
+
+### HPA example
+
+To enable horizontal scaling of DataPower Pods on both memory and CPU:
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta3
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  podAutoScaling:
+    method: HPA
+    hpa:
+      targetCPUUtilizationPercentage: 90
+      targetMemoryUtilizationPercentage: 80
+      maxReplicas: 6
+      minReplicas: 2
+```
+
+The above example attempts to maintain CPU usage at 90% and memory usage at 80% with a limit of maximum 6 pods. When CPU utilization goes above 90%, new pods will be created upto a maximum of 6. When CPU utilization falls below 90%, one or more pods will be removed to maintain CPU utilization at 90%. Similar logic is used for maintaining memory utilization.
+When `targetCPUUtilizationPercentage` is not specified or set to 0, CPU scaling is disabled. Similarly, when `targetMemoryUtilizationPercentage` is not specified or set to 0, memory scaling is disabled.
+Value spcified in `minReplicas` field acts as a floor for replica count in horizontal scaling. This means, at any point in time, total number of DataPower pods will not be lower than the `minReplicas`.
+
+### VPA example
+
+To enable vertical scaling of DataPower Pods on both memory and CPU:
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta3
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  podAutoScaling:
+    method: VPA
+    vpa:
+      maxAllowedCPU: 8
+      maxAllowedMemory: 16Gi
+```
+
+The above example allows a maximum limit of 8 CPU cores and 16GB memory per DataPower pod. When current memory utilization of DataPower container exceeds the resource limit for memory specified in pod.yaml, vertical pod autoscaler will automatically increase the resource limit accordingly and restart the corresponding DataPower Pod. It will not increase the limit beyond `maxAllowedMemory`. Similar logic is used when increasing CPU limit.
+Values specified in `Resources.Request` in DataPowerService custom resource acts as a floor for vertical scaling. In other words, when utilization stays low, vertical pod autoscaling will lower the resouce limits up to but not lower than what was specified in `Resouces.Request`.
+
+<InlineNotification>
+
+Prior to enabling `VPA`, ensure that the [installation prerequisites](/install/prereqs#optional:-vertical-pod-autoscaler) have been met.
+
+</InlineNotification>
+
+## Managed resources
+
+When either HPA or VPA are enabled via the DataPowerService `podAutoScaling` API, the DataPower Operator will create and manage the underlying HPA or VPA Kubernetes resources. Similar to the StatefulSet, these resources are considered managed resources owned by the operator, and they should not be modified by the user.
+
+When VPA is enabled and configured, the DataPower Operator creates the VPA resource with the update mode set to `Off`, which means that VPA recommendations are written to the VPA resource but not automatically applied to the target by the autoscaler. This is by design, as the DataPower Operator reads the recommendations from the VPA resource during reconciliation, and applies the updates to the DataPower StatefulSet by modifying the resources in the pod template spec. This is to ensure that recommendations from VPA meet the resource constraints of DataPower containers, such as only supporting whole CPU core counts.
+
+## External autoscalers
+
+The use of external autoscalers against the DataPowerService or managed StatefulSet is **not** supported.

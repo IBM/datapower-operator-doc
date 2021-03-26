@@ -1,0 +1,36 @@
+---
+title: Operator lock not removed
+description: Troubleshooting guide related to DataPower Operator lock removal
+---
+
+## Background
+
+The DataPower Operator uses leader-for-life [leader election](https://docs.openshift.com/container-platform/4.6/operators/operator_sdk/osdk-leader-election.html) to ensure only one controller pod is active at a time. This relies on Kubernetes garbage collection to clean up the lock when the old operator pod is deleted.
+
+## Issue
+
+When Kubernetes garbage collection is slow, this can lead to an extended period of time in which the new operator pod is not able to obtain the lock, thus preventing it from becoming active and reconciling resources.
+
+## Symptoms
+
+Logs from the `datapower-operator` pod will show that the pod is waiting for the lock to be removed:
+
+```
+{"level":"info","ts":"2021-03-08T19:29:53.432Z","logger":"leader","msg":"Not the leader. Waiting."}
+{"level":"info","ts":"2021-03-08T19:29:57.971Z","logger":"leader","msg":"Leader pod has been deleted, waiting for garbage collection to remove the lock."}
+```
+
+## Solution
+
+To resolve this issue, you must manually remove the lock. This can be done by deleting the `datapower-operator-lock` ConfigMap in the namespace of the DataPower Operator pod.
+
+```
+kubectl delete cm datapower-operator-lock
+```
+
+Once the lock is removed, the new DataPower Operator pod will begin operation. This can be verified by checking the logs from the operator pod:
+
+```
+{"level":"info","ts":"2021-03-08T20:16:29.974Z","logger":"leader","msg":"No pre-existing lock was found."}
+{"level":"info","ts":"2021-03-08T20:16:30.008Z","logger":"leader","msg":"Became the leader."}
+```

@@ -9,13 +9,14 @@ Ensure your environment meets the following requirements prior to installing the
 
 </PageDescription>
 
-<AnchorLinks>
+<AnchorLinks small>
   <AnchorLink>Container environment</AnchorLink>
   <AnchorLink>Resource requirements</AnchorLink>
   <AnchorLink>Cluster-scope permissions</AnchorLink>
   <AnchorLink>Optional: PodSecurityPolicy</AnchorLink>
   <AnchorLink>Optional: SecurityContextConstraints</AnchorLink>
   <AnchorLink>Optional: Multiple Failure Zones</AnchorLink>
+  <AnchorLink>Optional: Vertical Pod Autoscaler</AnchorLink>
 </AnchorLinks>
 
 ## Container environment
@@ -51,7 +52,9 @@ For more information on what this spec means, see [Managing Resources for Contai
 
 ### Operand
 
-- The **minimum** resource requirements for a single DataPower container are 4 CPU and 4 GB of memory.
+- The **minimum** resource requirements for a single DataPower container:
+  - 1 CPU and 4 GB memory for nonproduction deployments
+  - 4 CPU and 4 GB memory for production deployments
 - For API Connect workloads, a minimum of 8 GB of memory is required per container.
 - For production high-availability, a minimum of 3 replicas (one per node) are recommended.
 
@@ -181,3 +184,64 @@ volumes:
 The DataPower Operator `Deployment` is designed to pods evenly across multiple Kubernetes zones. To take advantage of this functionality, follow the [prerequisites](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/#prerequisites) for Pod Topology Spread Constraints.
 
 With `EvenPodsSpread` enabled in the cluster, no more than one DataPower Operator pod will be deployed per zone. If `replicaCount` is higher than the number of available zones, the remaining replicas will not be scheduled.
+
+## Optional: Vertical Pod Autoscaler
+
+The DataPower Operator supports [Vertical Pod Autoscaling](/features/pod-auto-scaling) of the DataPowerService operand. If you wish to utilize this functionality, the Vertical Pod Autoscaler must be first installed and configured in your Kubernetes or OpenShift cluster.
+
+### Installing on Kubernetes
+
+For traditional Kubernetes clusters, reference the Kubernetes [documentation](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler#installation) for installation.
+
+### Installing on OpenShift
+
+For OpenShift clusters, reference the OpenShift [documentation](https://docs.openshift.com/container-platform/4.6/nodes/pods/nodes-pods-vertical-autoscaler.html) for installation.
+
+### Configure RBAC
+
+To enable the VPA to provide scaling recommendations for the DataPowerService operand, a `ClusterRole` and `ClusterRoleBinding` must be created and links to the `vpa-recommender` Service Account installed with VPA.
+
+Depending on whether you are installing on normal Kubernetes or OpenShift (OCP), the `namespace` of the `vpa-recommender` Service Account may vary. For Kubernetes, it is most likely `kube-system`, and for OCP it is most likely `openshift-vertical-pod-autoscaler`.
+
+1. Determine the namespace of the `vpa-recommender` Service Account. If you are not sure, you can find it with the following:
+
+    ```
+    $ kubectl get sa --all-namespaces | grep vpa-recommender
+    openshift-vertical-pod-autoscaler                  vpa-recommender                            2         177m
+    ```
+
+    The first column indicates the namespace, i.e. `openshift-vertical-pod-autoscaler`.
+
+2. Create the `ClusterRole` resource, using the following YAML:
+
+    ```yaml
+    kind: ClusterRole
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: datapower-operator-vpa-recommender
+    rules:
+    - apiGroups:
+      - datapower.ibm.com
+      resources:
+      - datapowerservices/scale
+      verbs:
+      - get
+      - watch
+    ```
+
+3. Create the `ClusterRoleBinding` resource, using the following YAML as a template. The `namespace` under `subjects` must match the namespace determined in Step 1.
+
+    ```yaml
+    kind: ClusterRoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: datapower-operator-vpa-recommender
+    subjects:
+    - kind: ServiceAccount
+      name: vpa-recommender
+      namespace: openshift-vertical-pod-autoscaler
+    roleRef:
+      kind: ClusterRole
+      name: datapower-operator-vpa-recommender
+      apiGroup: rbac.authorization.k8s.io
+    ```
