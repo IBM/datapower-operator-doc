@@ -1,0 +1,40 @@
+---
+title: Licenses
+description: Guide for determining the appropriate license ID for a given DataPower firmware version and usage.
+---
+
+## License reference tables
+
+The tables below can be used to determine the appropriate value of the DataPowerService `spec.license.license` property, based on the desired version (`spec.version`) and usage (`spec.license.use`).
+
+### Licenses by channel
+
+|Value of `spec.version`|Value of `spec.license.use`                   |Value of `spec.license.license`|Link to license       |
+|-----------------------|----------------------------------------------|-------------------------------|----------------------|
+|`10.0-cd`              |`production`, `nonproduction`, or `developers`|`L-RJON-BYDR3Q`                |https://ibm.biz/BdfsR9|
+|`10.0-cd`              |`developers-limited`                          |`L-RJON-BYDQZF`                |https://ibm.biz/BdfsRC|
+|`10.0-lts`             |`production`, `nonproduction`, or `developers`|`L-RJON-BXENBR`                |https://ibm.biz/BdfE2Y|
+|`10.0-lts`             |`developers-limited`                          |`L-RJON-BXENED`                |https://ibm.biz/BdfHUi|
+
+<InlineNotification>
+
+When `spec.version` selects a channel, the license corresponds to the latest version within that channel. See [channels](/apis/datapowerservice/v1beta3#channels) for reference.
+
+</InlineNotification>
+
+### Licenses by version
+
+|Value of `spec.version`|Value of `spec.license.use`                   |Value of `spec.license.license`|Link to license       |
+|-----------------------|----------------------------------------------|-------------------------------|----------------------|
+|`10.0.0.0`             |`production`, `nonproduction`, or `developers`|`L-RJON-BMJ4ED`                |https://ibm.biz/BdfHta|
+|`10.0.0.0`             |`developers-limited`                          |`L-RJON-BPCPNS`                |https://ibm.biz/BdfHtG|
+|`10.0.0.1`             |`production`, `nonproduction`, or `developers`|`L-RJON-BSCMKP`                |https://ibm.biz/BdfH6F|
+|`10.0.0.1`             |`developers-limited`                          |`L-RJON-BSCMQA`                |https://ibm.biz/BdfH6H|
+|`10.0.1.0`             |`production`, `nonproduction`, or `developers`|`L-RJON-BSPNZM`                |https://ibm.biz/BdfH6K|
+|`10.0.1.0`             |`developers-limited`                          |`L-RJON-BSPNY7`                |https://ibm.biz/BdfH6G|
+|`10.0.1.1`             |`production`, `nonproduction`, or `developers`|`L-RJON-BV8J82`                |https://ibm.biz/BdfH6n|
+|`10.0.1.1`             |`developers-limited`                          |`L-RJON-BV8JBL`                |https://ibm.biz/BdfH6e|
+|`10.0.1.2`             |`production`, `nonproduction`, or `developers`|`L-RJON-BXENBR`                |https://ibm.biz/BdfE2Y|
+|`10.0.1.2`             |`developers-limited`                          |`L-RJON-BXENED`                |https://ibm.biz/BdfHUi|
+|`10.0.2.0`             |`production`, `nonproduction`, or `developers`|`L-RJON-BYDR3Q`                |https://ibm.biz/BdfsR9|
+|`10.0.2.0`             |`developers-limited`                          |`L-RJON-BYDQZF`                |https://ibm.biz/BdfsRC|
