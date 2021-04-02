@@ -14,7 +14,7 @@ const FirstRightText = () => (
 
     <div className={calloutLink}>
       <Link
-        to="release-notes"
+        to="release-notes#1.3.0"
       >
         Release notes →
       </Link>

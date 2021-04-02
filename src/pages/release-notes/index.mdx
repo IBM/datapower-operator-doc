@@ -3,6 +3,16 @@ title: Release Notes
 description: IBM DataPower Operator release notes
 ---
 
+## 1.2.3
+
+- Add support for DataPower firmware version `10.0.1.3`, available in the `10.0-eus` and `10.0-lts` [channels](/apis/datapowerservice/v1beta2#channels).
+- Conversion webhook management will now upgrade conversion webhook Deployment as part of operator upgrade.
+- Fix split-cluster issue related to gateway-peering in API Connect Gateway deployments.
+- Fix reconciliation of `spec.labels` in `DataPowerService` custom resource instances.
+- Fix `status.mgmtPorts` update behavior when StatefulSet is not `Ready`.
+- Fix DataPower config initialization sequence and behavior.
+- Fix an issue related to capital domain names.
+
 ## 1.3.0
 
 ### v1beta3 API
