@@ -1,0 +1,56 @@
+---
+title: Release Notes
+tabs: ['CD', 'EUS']
+description: IBM DataPower Operator release notes
+---
+
+<PageDescription>
+
+Release notes for EUS releases.
+
+</PageDescription>
+
+## 1.2.3
+
+- Add support for DataPower firmware version `10.0.1.3`, available in the `10.0-eus` and `10.0-lts` [channels](/apis/datapowerservice/v1beta2#channels).
+- Conversion webhook management will now upgrade conversion webhook Deployment as part of operator upgrade.
+- Fix split-cluster issue related to gateway-peering in API Connect Gateway deployments.
+- Fix reconciliation of `spec.labels` in `DataPowerService` custom resource instances.
+- Fix `status.mgmtPorts` update behavior when StatefulSet is not `Ready`.
+- Fix DataPower config initialization sequence and behavior.
+- Fix an issue related to capital domain names.
+
+## 1.2.2
+
+- Add support for DataPower firmware version `10.0.1.2`.
+- Fix issue relating to `temporary:///` file system cleanup during DataPower pod initialization.
+- Update Go to address CVEs: CVE-2020-28367, CVE-2020-28366, CVE-2020-28362.
+
+## 1.2.1
+
+- Fix Pod Topology Spread Constraints.
+  - Set `topologyKey` to well-known "zone" label `topology.kubernetes.io/zone`.
+  - Set `whenUnsatisfiable` to `ScheduleAnyway` to avoid blocked scheduling.
+
+## 1.2.0
+
+### Enhancements
+
+- Add support for `datapower-cp4i` image, see [Image selection](/features/entitled-registry#image-selection) and [Cloud Pak for Integration: Gateway runtime](https://www.ibm.com/support/knowledgecenter/SS9H2Y_10.0/com.ibm.dp.doc/icp4i.html).
+- Add support for DataPower version `10.0.1.1`.
+- Add support for Cloud Pak for Integration 2020.4.1 EUS release.
+- Pod scheduling errors are now raised as `Conditions` on the `DataPowerService` instance.
+
+### Changes
+
+- `DataPowerService` CR names are now limited to 52 characters.
+
+### Deprecated
+
+- `storage.volumeMode` is deprecated, and will now always be set to `Filesystem` for `persistent` storage requests.
+  - If set to `Block` previously, the CR will be migrated to use `Filesystem` instead, automatically.
+
+### Platform
+
+- Minimum OCP version is now 4.6.
+- Minimum Kubernetes version is now 1.17.

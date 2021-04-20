@@ -6,7 +6,7 @@ import { Link } from 'gatsby'
 
 import Carbon from '../../images/carbon.jpg';
 
-const FirstLeftText = () => <p>Version 1.3.0</p>;
+const FirstLeftText = () => <p>Version 1.3.1</p>;
 
 const FirstRightText = () => (
   <p>
@@ -14,7 +14,7 @@ const FirstRightText = () => (
 
     <div className={calloutLink}>
       <Link
-        to="release-notes#1.3.0"
+        to="release-notes/cd#1.3.1"
       >
         Release notes →
       </Link>

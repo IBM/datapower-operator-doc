@@ -69,4 +69,4 @@
       path: /troubleshooting/operator-lock
 - title: Release Notes
   pages:
-    - path: /release-notes
+    - path: /release-notes/cd
