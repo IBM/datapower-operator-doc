@@ -51,6 +51,14 @@
       path: /guides/operator-rollbacks
     - title: Licenses
       path: /guides/licenses
+    - title: Running as root
+      path: /guides/run-as-root
+- title: Migration
+  pages:
+    - title: Migrating to containers
+      path: /migration/containers
+    - title: Migrating from v2018 to v10
+      path: /migration/v2018-v10-migration
 - title: Troubleshooting
   pages:
     - title: Logging

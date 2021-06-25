@@ -19,33 +19,36 @@ The `DataPowerService` is a Custom Resource Definition used to deploy and manage
 
 ## Properties
 
-|Property             |Description                                                         |Required|Default      |
-|---------------------|--------------------------------------------------------------------|--------|-------------|
-|`license`            |License acceptance and use                                          |Yes     |None         |
-|`version`            |DataPower firmware version                                          |Yes     |None         |
-|`replicas`           |Desired number of Pods in the Statefulset                           |Yes     |None         |
-|`image`              |Custom DataPower image                                              |No      |None         |
-|`imagePullSecrets`   |Image pull secrets                                                  |No      |None         |
-|`users`              |List of `Users` to associate with DataPower                         |No      |See doc below|
-|`domains`            |List of `DataPowerDomains` to associate with Service                |No      |None         |
-|`env`                |Environment variables                                               |No      |None         |
-|`initCmds`           |Commands to run during user-specified initialization stage          |No      |None         |
-|`extraExe`           |List of ConfigMap names to mount containing extra executables       |No      |None         |
-|`debug`              |Enable debug logging on init scripts                                |No      |`false`      |
-|`resources`          |Resource specifications for StatefulSet                             |No      |See doc below|
-|`livenessProbe`      |Custom LivenessProbe                                                |No      |See doc below|
-|`readinessProbe`     |Custom ReadinessProbe                                               |No      |See doc below|
-|`affinity`           |Custom Kubernetes `Affinity` configuration                          |No      |See doc below|
-|`storage`            |Persistent volume requests                                          |No      |See doc below|
-|`podManagementPolicy`|Control how pods are deployed                                       |No      |`Parallel`   |
-|`serviceAccountName` |Name of desired service account                                     |No      |None         |
-|`odTracing`          |OpenTracing Agent and Collector container configurations            |No      |See doc below|
-|`annotations`        |Custom annotations to apply to Pods                                 |No      |None         |
-|`labels`             |Custom labels to apply to Pods                                      |No      |None         |
-|`tolerations`        |Toleration settings to apply when scheduling DataPower Pods         |No      |None         |
-|`nodeSelector`       |NodeSelector key-value pairs to match when scheduling DataPower Pods|No      |None         |
-|`lifecycle`          |Container lifecycle hook to be executed                             |No      |None         |
-|`podAutoScaling`     |Pod autoscaling settings used by horizontal or vertical scaling     |No      |None         |
+|Property             |Description                                                         |Required|Default       |
+|---------------------|--------------------------------------------------------------------|--------|--------------|
+|`license`            |License acceptance and use                                          |Yes     |None          |
+|`version`            |DataPower firmware version                                          |Yes     |None          |
+|`replicas`           |Desired number of Pods in the Statefulset                           |Yes     |None          |
+|`image`              |Custom DataPower image                                              |No      |None          |
+|`imagePullSecrets`   |Image pull secrets                                                  |No      |None          |
+|`imagePullPolicy`    |Image pull policy                                                   |No      |`IfNotPresent`|
+|`users`              |List of `Users` to associate with DataPower                         |No      |See doc below |
+|`domains`            |List of `DataPowerDomains` to associate with Service                |No      |None          |
+|`env`                |Environment variables                                               |No      |None          |
+|`initCmds`           |Commands to run during user-specified initialization stage          |No      |None          |
+|`extraExe`           |List of ConfigMap names to mount containing extra executables       |No      |None          |
+|`debug`              |Enable debug logging on init scripts                                |No      |`false`       |
+|`resources`          |Resource specifications for StatefulSet                             |No      |See doc below |
+|`livenessProbe`      |Custom LivenessProbe                                                |No      |See doc below |
+|`readinessProbe`     |Custom ReadinessProbe                                               |No      |See doc below |
+|`affinity`           |Custom Kubernetes `Affinity` configuration                          |No      |See doc below |
+|`storage`            |Persistent volume requests                                          |No      |See doc below |
+|`podManagementPolicy`|Control how pods are deployed                                       |No      |`Parallel`    |
+|`serviceAccountName` |Name of desired service account                                     |No      |None          |
+|`odTracing`          |OpenTracing Agent and Collector container configurations            |No      |See doc below |
+|`jaegerTracing`      |Generic Jaeger Tracing container configurations                     |No      |See doc below |
+|`annotations`        |Custom annotations to apply to Pods                                 |No      |None          |
+|`labels`             |Custom labels to apply to Pods                                      |No      |None          |
+|`tolerations`        |Toleration settings to apply when scheduling DataPower Pods         |No      |None          |
+|`nodeSelector`       |NodeSelector key-value pairs to match when scheduling DataPower Pods|No      |None          |
+|`lifecycle`          |Container lifecycle hook to be executed                             |No      |None          |
+|`podAutoScaling`     |Pod autoscaling settings used by horizontal or vertical scaling     |No      |None          |
+|`runAsRoot`          |Run the DataPower containers as root user                           |No      |`false`       |
 
 <AnchorLinks small>
   <AnchorLink>license</AnchorLink>
@@ -53,6 +56,7 @@ The `DataPowerService` is a Custom Resource Definition used to deploy and manage
   <AnchorLink>replicas</AnchorLink>
   <AnchorLink>image</AnchorLink>
   <AnchorLink>imagePullSecrets</AnchorLink>
+  <AnchorLink>imagePullPolicy</AnchorLink>
   <AnchorLink>users</AnchorLink>
   <AnchorLink>domains</AnchorLink>
   <AnchorLink>env</AnchorLink>
@@ -67,12 +71,14 @@ The `DataPowerService` is a Custom Resource Definition used to deploy and manage
   <AnchorLink>podManagementPolicy</AnchorLink>
   <AnchorLink>serviceAccountName</AnchorLink>
   <AnchorLink>odTracing</AnchorLink>
+  <AnchorLink>jaegerTracing</AnchorLink>
   <AnchorLink>annotations</AnchorLink>
   <AnchorLink>labels</AnchorLink>
   <AnchorLink>tolerations</AnchorLink>
   <AnchorLink>nodeSelector</AnchorLink>
   <AnchorLink>lifecycle</AnchorLink>
   <AnchorLink>podAutoScaling</AnchorLink>
+  <AnchorLink>runAsRoot</AnchorLink>
 </AnchorLinks>
 
 ## `license`
@@ -133,21 +139,21 @@ You can view the reconciled and available versions and channels on the `DataPowe
 
 #### Supported
 
-The table below shows the **supported** channels for this CRD version (`v1beta3`) and operator version (`1.3.x`). Supported channels indicate channels which can be specified by `spec.version` for which this version of the DataPower Operator will understand and reconcile.
+The table below shows the **supported** channels for this CRD version (`v1beta3`) and operator version (`1.4.x`). Supported channels indicate channels which can be specified by `spec.version` for which this version of the DataPower Operator will understand and reconcile.
 
 |Channel   |Stream    |Latest        |
 |----------|----------|--------------|
 |`10.0-lts`|`10.0.1.x`|`10.0.1.3`    |
-|`10.0-cd` |`10.0.x.y`|`10.0.2.0`    |
+|`10.0-cd` |`10.0.x.y`|`10.0.3.0`    |
 
 #### Available
 
-The table below shows the **available** channels for this CRD version (`v1beta3`) and operator version (`1.3.x`). Available channels (and version) are advertised in Cloud Pak for Integration as targets for operand upgrade. To enable and support the Cloud Pak for Integration EUS strategy, version `1.2.x` will only advertise EUS operand channels and versions.
+The table below shows the **available** channels for this CRD version (`v1beta3`) and operator version (`1.4.x`). Available channels (and version) are advertised in Cloud Pak for Integration as targets for operand upgrade. To enable and support the Cloud Pak for Integration EUS strategy, version `1.2.x` will only advertise EUS operand channels and versions.
 
 |Channel   |Stream    |Latest        |
 |----------|----------|--------------|
 |`10.0-lts`|`10.0.1.x`|`10.0.1.3`    |
-|`10.0-cd` |`10.0.x.y`|`10.0.2.0`    |
+|`10.0-cd` |`10.0.x.y`|`10.0.3.0`    |
 
 ### Example
 
@@ -228,6 +234,30 @@ spec:
 Note: If you do not specify the name of a Secret object, then the operator will look for one named `ibm-entitlement-key`. This is typically the method used to provide the Entitlement Key for pulling images from the IBM Entitled Registry. For more information, see [Entitled Registry](/features/entitled-registry#image-pull-secret).
 
 </InlineNotification>
+
+## `imagePullPolicy`
+
+<InlineNotification>
+
+Note: This property is only available in version `1.4.0` onward.
+
+</InlineNotification>
+
+### Description
+
+The `imagePullPolicy` property specifies the image pull policy for the IBM DataPower Gateway image when the StatefulSet is created. Valid values are: `IfNotPresent`, `Always`, and `Never`. Default is `IfNotPresent`.
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta3
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  imagePullPolicy: IfNotPresent
+  ...
+```
 
 ## `users`
 
@@ -727,6 +757,165 @@ spec:
   ...
 ```
 
+## `jaegerTracing`
+
+### Description
+
+The `jaegerTracing` property contains the necessary information to configure and run a Jaeger Tracing agent sidecar container. By default, Jaeger Tracing is disabled. To enable Jaeger Tracing, the `jaegerTracing` property must be defined, with at least the `jaegerCollectorEndpoint` property specified.
+
+Unlike the `odTracing` feature, `jaegerTracing` creates _only_ an agent container, not a collector. Thus, a Jaeger Collector must be configured independently, e.g., with the [Jaeger Operator](https://www.jaegertracing.io/docs/latest/operator/).
+
+Required:
+
+- `jaegerCollectorEndpoint`
+
+Optional:
+
+- `agentImage`
+- `agentLivenessProbe`
+- `agentPullPolicy`
+- `agentReadinessProbe`
+- `samplingRate`
+- `samplingType`
+- `tls`
+
+#### `jaegerCollectorEndpoint`
+
+_**Required**_
+
+The `jaegerCollectorEndpoint` property specifies the host and port for the Jaeger Collector's gRPC port. For example: `jaeger-collector-headless.cp4i.svc.cluster.local:14250`.
+
+
+#### `agentImage`
+
+_**Optional**_
+
+Specifies the image to be used for the Jaeger Agent container. The default agent image is `jaegertracing/jaeger-agent:latest`.
+
+
+#### `agentLivenessProbe`
+
+_**Optional**_
+
+Custom liveness probe settings for the Jaeger Agent container. Allows the following subset of typical liveness probe settings:
+
+- `failureThreshold`
+- `initialDelaySeconds`
+- `periodSeconds`
+- `timeoutSeconds`
+
+
+#### `agentPullPolicy`
+
+_**Optional**_
+
+Pull policy for the Jaeger Agent container image. Defaults to `IfNotPresent`.
+
+
+#### `agentReadinessProbe`
+
+_**Optional**_
+
+Custom readiness probe settings for the Jaeger Agent container. Allows the following subset of typical readiness probe settings:
+
+- `failureThreshold`
+- `initialDelaySeconds`
+- `periodSeconds`
+- `timeoutSeconds`
+
+
+#### `samplingRate`
+
+_**Optional**_
+
+Sampling rate for Jaeger Client, based on sampling type.
+
+The default value and valid values depends on the selected `samplingType`:
+
+| `samplingType`    | Default `samplingRate` | Valid `samplingRate` values  |
+| ----------------- | ---------------------- | ---------------------------- |
+| `remote`          | `0.001`                | 0 &le; `samplingRate` &le; 1 |
+| `probabilistic`   | `0.001`                | 0 &le; `samplingRate` &le; 1 |
+| `const`           | `0`                    | 0 or 1                       |
+| `ratelimiting`    | `0`                    | `samplingRate` &ge; 0        |
+
+ See [Client Sampling Configuration](https://www.jaegertracing.io/docs/latest/sampling/#client-sampling-configuration) for details, where `samplingRate` corresponds with `sampler.param`.
+
+#### `samplingType`
+
+_**Optional**_
+
+Type of sampling to use: `remote`, `const`, `ratelimiting`, or `probabilistic`. Default: `remote`.
+
+See [Client Sampling Configuration](https://www.jaegertracing.io/docs/latest/sampling/#client-sampling-configuration) for details, where `samplingType` corresponds with `sampler.type`.
+
+
+#### `tls`
+
+_**Optional**_
+
+TLS configuration for the Jaeger Agent Reporter. By default, TLS with server host verification (using the system truststore) is enabled, though client authentication is disabled. See `--reporter.grpc.tls.*` under the [jaeger-agent CLI args](https://www.jaegertracing.io/docs/latest/cli/#jaeger-agent) for details.
+
+<InlineNotification>
+
+While the `tls` property is optional, it will likely need to be configured to align with the Jaeger Collector's TLS configuration for the agent to be able to successfully connect to the collector. By default, TLS with host verification is enabled. In most cases, `tls.collectorEndpoint.secretName` may need to specify the name of a secret containing the Jaeger Collector TLS server certificate's issuing CA with filename `ca.crt`.
+
+</InlineNotification>
+
+The following properties are available for configuration:
+
+- `disabled`
+
+    _**Required.**_ When `true`, disables TLS between the Jaeger Agent Reporter and the Jaeger Collector Endpoint. Default: `false`
+
+- `collectorEndpoint`
+
+    _**Optional.**_ Credentials for validating the Jaeger Collector Endpoint's TLS server credentials. If Collector Endpoint server host verification is enabled (as is the default case), these credentials will likely need to be configured for connections to succeed.
+
+    The following properties are available for the `collectorEndpoint`:
+
+    - `secretName`
+
+        _**Required.**_ Name of a secret with the Jaeger Collector's TLS server certificates issuing CA. The CA must be in a file named either `ca.crt` or `tls.crt`. 
+
+    - `serverName`
+
+        _**Optional.**_ Specify the TLS server name we expect to find in the Collector Endpoint's TLS server certificate. <br/><br/>
+
+- `reporterClientSecretName`
+
+    _**Optional.**_ The name of the secret that stores the TLS client credentials used to identify the Jaeger Agent Reporter. If the Jaeger Collector is configured to authenticate TLS client connections, this secret will be necessary for connections to succeed.
+
+- `skipHostVerify`
+
+    _**Optional.**_ Disable Collector Endpoint server host verification. Default: `false`
+
+    See `--reporter.grpc.tls.skip-host-verify` under [jaeger-agent CLI args](https://www.jaegertracing.io/docs/latest/cli/#jaeger-agent). 
+
+<InlineNotification kind="warning">
+
+Setting `skipHostVerify: true` is insecure and should only be used for testing in development environments.
+
+</InlineNotification>
+
+### Example
+
+A typical configuration will likely be similiar to this:
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta3
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  jaegerTracing:
+    jaegerCollectorEndpoint: jaeger-collector-headless.cp4i.svc.cluster.local:14250
+    tls:
+      collectorEndpoint:
+        secretName: jaeger-collector-headless-tls
+      disabled: false
+```
+
 ## `annotations`
 
 ### Description
@@ -810,7 +999,46 @@ spec:
 
 ### Description
 
-`lifecycle` allows scripts to be executed after starting and before stopping DataPower container. For more details on container lifecycle hooks, please refer to [Kubernetes documentation](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/).
+`lifecycle` allows scripts to be executed after starting and before stopping the DataPower container. For more details on container lifecycle hooks, please refer to the following Kubernetes documentation:
+
+- [Container Lifecycle Hooks](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/)
+- [Attach Handlers to Container Lifecycle Events](https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/)
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta3
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  lifecycle:
+    postStart:
+      exec:
+        command: ["/bin/sh", "-c", "echo Hello from the postStart handler >> ~/lifecycle.log"]
+    preStop:
+      exec:
+        command: ["/bin/sh", "-c", "echo Hello from the preStop handler >> ~/lifecycle.log"]
+
+```
+
+### Delaying SIGTERM with preStop
+
+When the DataPower container is terminated by Kubernetes under normal conditions (such as a scaling event or rolling update), any in-flight transactions may be terminated. The use of the `preStop` lifecycle hook can help to mitigate this by delaying the `SIGTERM` being sent to the container. For example, a 20 second delay in the below example would delay the shutdown by 20 seconds giving in-flight transactions on the gateway that much time to complete successfully before being terminated.
+
+```yaml
+spec:
+  lifecycle:
+    preStop:
+      exec:
+        command: ["/bin/sh", "-c", "sleep 20"]
+```
+
+<InlineNotification kind="warning">
+
+The `preStop` handler should complete within `terminationGracePeriodSeconds`, which by default is 30 seconds. Otherwise it will not prevent the `TERM` signal being sent to the DataPower container. Thus it is not recommended to exceed `sleep 30`. See the Kubernetes documentation on [termination of Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) for a deeper understanding of this lifecycle.
+
+</InlineNotification>
 
 ## `podAutoScaling`
 
@@ -898,6 +1126,35 @@ spec:
     vpa:
       maxAllowedCPU: 8
       maxAllowedMemory: 16Gi
+```
+
+## `runAsRoot`
+
+<InlineNotification>
+
+Note: This property is only available in version `1.4.0` onward.
+
+</InlineNotification>
+
+### Description
+
+When `runAsRoot` is enabled (boolean `true`), the StatefulSet will be configured to run the DataPower containers as `root` user.
+
+<InlineNotification kind="warning">
+
+If using OpenShift, a custom SecurityContextConstraint must be applied prior enabling this property. See [Running DataPower containers as root user](/guides/run-as-root) for more details.
+
+</InlineNotification>
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta3
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  runAsRoot: true
 ```
 
 # Status

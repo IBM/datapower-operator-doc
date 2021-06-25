@@ -130,3 +130,42 @@ When a `datapower-operator-conversion-webhook` Deployment is being managed, the 
 ### Lifecycle
 
 All conversion resources (1, 2, 3 above) are owned by the managing DataPower Operator. When the managing DataPower Operator Deployment is deleted, all conversion resources will be garbage collected. The conversion definition stored in the DataPowerService CRD is not cleaned up and will remain. This will potentially cause problems during uninstallation of the last DataPower Operator in the cluster, follow the [uninstallation guide](/uninstall) to be safe.
+
+### Image override
+
+<InlineNotification kind="warning">
+
+You should not override the `datapower-operator-conversion-webhook` image unless instructed to do so by IBM Support.
+
+</InlineNotification>
+
+<InlineNotification>
+
+Note: This feature is only available in version `1.4.0` onward.
+
+</InlineNotification>
+
+The `datapower-operator-conversion-webhook` Deployment's image can be overridden by setting an environment variable (`CONVERSION_WEBHOOK_IMAGE`) in the `datapower-operator` Deployment. The value of the environment variable must be the full image URL for the desired image.
+
+#### Example
+
+The below yaml snippet shows how to set this variable within the `datapower-operator` Deployment resource, using the `1.4.0` version image as example.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: datapower-operator
+  ...
+spec:
+  template:
+    spec:
+      ...
+      containers:
+        - name: datapower-operator
+          env:
+          - name: CONVERSION_WEBHOOK_IMAGE
+            value: icr.io/cpopen/datapower-operator-conversion-webhook:1.4.0
+          ...
+
+```

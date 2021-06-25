@@ -3,8 +3,8 @@ import ResourceLinks from 'gatsby-theme-carbon/src/components/LeftNav/ResourceLi
 
 const links = [
   {
-    title: 'Knowledge Center',
-    href: 'https://www.ibm.com/support/knowledgecenter/SS9H2Y',
+    title: 'IBM Documentation',
+    href: 'https://www.ibm.com/docs/en/datapower-gateways',
   },
   {
     title: 'Github',
