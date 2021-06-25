@@ -16,7 +16,7 @@ The DataPower Operator supports managing DataPower configuration through the `do
   <AnchorLink>Updating Domains</AnchorLink>
 </AnchorLinks>
 
-## The Domains Definition
+# The Domains Definition
 
 The following snippet of the `DataPowerService` Custom Resource contains all fields relevant to `domains`, filled with example values.
 
@@ -45,29 +45,29 @@ domains:
     - "example-local"
 ```
 
-### `domains`
+## `domains`
 
 `domains` is a list of DataPower Domains that should be configured. Domains are comprised of `name`, `certs`, and `configMethod` fields. For a Domain to be created, a configuration method must be defined. The supported methods are:
 
 - `dpApp` - Domain configuration via `config` and `local` ConfigMaps.
 
-### `name`
+## `name`
 
 The `name` field is just that: the name of the domain. This will propagate into the pod and be the name of the resultant DataPower Domain.
 
-### `certs`
+## `certs`
 
 `certs` is a list of all certificate, key, or general crypto files that need to be dropped into a Domain. There are two fields for each item in the `certs` list:
 
-#### `certType`
+### `certType`
 
 Defines the type of cert. The accepted values are `usrcerts` and `sharedcerts`. A `usrcerts` type will apply only to the specific Domain. A `sharedcerts` type will be available to all Domains. The best practice for `sharedcerts` types is to associate them with the `default` domain, but this is not required.
 
-#### `secret`
+### `secret`
 
 Defines the name of the Kubernetes or OpenShift secret containing the crypto files. This secret can contain any number of certificates.
 
-#### `subPath`
+### `subPath`
 
 Defines the SubPath to place the cert into. This field is optional, and only allowed if `certType` is `usrcerts`. The provided SubPath must be a relative path, and will be appended to the domain's directory path. If not included or left empty, the cert will not be placed in a subpath. An example would be `dir1/dir2`.
 
@@ -85,11 +85,48 @@ Or alternatively, for a TLS secret:
 kubectl create secret tls <my-tls-secret> --key=/path/to/my.crt --cert=/path/to/my.key
 ```
 
-## Config Method: `dpApp`
+## `passphraseSecret`
+
+<InlineNotification>
+
+Note: `passphraseSecret` is only available in version `1.4.0` onward, in the `v1beta3` DataPowerService CRD.
+
+</InlineNotification>
+
+Optionally, a `passphraseSecret` property can be provided for use in decrypting `password-alias` objects within the DataPower configuration. The value of this property must be the name of a Kubernetes Secret in the same namespace.
+
+The Secret **must** contain a literal property, `passphrase`, which contains the passphrase to use in the `domain-settings` object within the DataPower domain configuration. When this `passphraseSecret` property is provided, the DataPower Operator will generate a `domain-settings` object for the configured domain, with the provided `passphrase`, such that any `password-alias` objects in the domain configuration can be decrypted and used for service implementation.
+
+Example Secret creation named `default-passphrase` with passphrase `datapower`:
+
+```
+oc create secret generic default-passphrase --from-literal=passphrase=datapower
+```
+
+Specifying this in a `domains` spec would look like:
+
+```yaml
+domains:
+- name: "default"
+  passphraseSecret: "default-passphrase"
+  dpApp:
+    config:
+    - "default-config"
+    local:
+    - "default-local"
+```
+
+For more details on the `domain-settings` and `passphrase` configurations, see the following IBM Documentation:
+
+- [Domain Settings commands](https://www.ibm.com/docs/en/datapower-gateways/10.0.x?topic=c-domain-settings-commands)
+- [passphrase](https://www.ibm.com/docs/en/datapower-gateways/10.0.x?topic=commands-passphrase)
+- [Creating password aliases in the password map](https://www.ibm.com/docs/en/datapower-gateways/10.0.x?topic=connections-creating-password-aliases-in-password-map)
+
+# Config Method: `dpApp`
 
 `dpApp` is a basic configuration method for the DataPower operand. It takes two ConfigMap arrays:
 
-### `config`
+## `config`
 
 - Array of ConfigMaps containing DataPower configuration file(s).
 - At least one ConfigMap must be provided for `config`.
@@ -122,7 +159,7 @@ spec:
       - "domain-config-pt3"
 ```
 
-### `local`
+## `local`
 
 - Array of ConfigMaps each containing a tarball of local files to be used by the Domain.
 - This value is optional.
@@ -141,7 +178,7 @@ Note that if multiple ConfigMaps are specified for `local`, you must be aware th
 
 </InlineNotification>
 
-### Example
+## Example
 
 This example shows the complete end-to-end flow for creating all resources necessary to configure a domain via the `dpApp` configuration method.
 
@@ -231,7 +268,7 @@ idg[testdomain](config)# dir config:
    227782.0 MB available to config:
 ```
 
-## Updating Domains
+# Updating Domains
 
 As described above, Domains are comprised of ConfigMaps and Secrets that exist in the k8s cluster. It is expected that over time a Domain configuration will need to be updated, including the `config` and `local` ConfigMaps and Secrets that comprise the `serts` for the Domain. These ConfigMaps and Secrets can be updated in-place in the cluster, and the DataPower Operator will automatically reconcile those changes.
 
