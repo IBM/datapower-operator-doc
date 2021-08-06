@@ -44,6 +44,7 @@ The `DataPowerService` is a Custom Resource Definition used to deploy and manage
 |`labels`             |Custom labels to apply to Pods                                      |No      |None         |
 |`tolerations`        |Toleration settings to apply when scheduling DataPower Pods         |No      |None         |
 |`nodeSelector`       |NodeSelector key-value pairs to match when scheduling DataPower Pods|No      |None         |
+|`lifecycle`          |Container lifecycle hook to be executed                             |No      |None         |
 
 <AnchorLinks small>
   <AnchorLink>license</AnchorLink>
@@ -69,6 +70,7 @@ The `DataPowerService` is a Custom Resource Definition used to deploy and manage
   <AnchorLink>labels</AnchorLink>
   <AnchorLink>tolerations</AnchorLink>
   <AnchorLink>nodeSelector</AnchorLink>
+  <AnchorLink>lifecycle</AnchorLink>
 </AnchorLinks>
 
 ## `license`
@@ -130,8 +132,8 @@ The table below shows the **supported** channels for this CRD version (`v1beta2`
 
 |Channel   |Stream    |Latest        |
 |----------|----------|--------------|
-|`10.0-eus`|`10.0.1.x`|`10.0.1.3-eus`|
-|`10.0-lts`|`10.0.1.x`|`10.0.1.3`    |
+|`10.0-eus`|`10.0.1.x`|`10.0.1.4-eus`|
+|`10.0-lts`|`10.0.1.x`|`10.0.1.4`    |
 |`10.0-cd` |`10.0.0.x`|`10.0.0.1`    |
 
 #### Available
@@ -140,7 +142,7 @@ The table below shows the **available** channels for this CRD version (`v1beta2`
 
 |Channel   |Stream    |Latest        |
 |----------|----------|--------------|
-|`10.0-eus`|`10.0.1.x`|`10.0.1.3-eus`|
+|`10.0-eus`|`10.0.1.x`|`10.0.1.4-eus`|
 
 ### Example
 
@@ -777,6 +779,51 @@ spec:
   nodeSelector:
     hostType: gateway
 ```
+
+## `lifecycle`
+
+### Description
+
+`lifecycle` allows scripts to be executed after starting and before stopping the DataPower container. For more details on container lifecycle hooks, please refer to the following Kubernetes documentation:
+
+- [Container Lifecycle Hooks](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/)
+- [Attach Handlers to Container Lifecycle Events](https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/)
+
+### Example
+
+```yaml
+apiVersion: datapower.ibm.com/v1beta2
+kind: DataPowerService
+metadata:
+  name: example-dpservice
+spec:
+  lifecycle:
+    postStart:
+      exec:
+        command: ["/bin/sh", "-c", "echo Hello from the postStart handler >> ~/lifecycle.log"]
+    preStop:
+      exec:
+        command: ["/bin/sh", "-c", "echo Hello from the preStop handler >> ~/lifecycle.log"]
+
+```
+
+### Delaying SIGTERM with preStop
+
+When the DataPower container is terminated by Kubernetes under normal conditions (such as a scaling event or rolling update), any in-flight transactions may be terminated. The use of the `preStop` lifecycle hook can help to mitigate this by delaying the `SIGTERM` being sent to the container. For example, a 20 second delay in the below example would delay the shutdown by 20 seconds giving in-flight transactions on the gateway that much time to complete successfully before being terminated.
+
+```yaml
+spec:
+  lifecycle:
+    preStop:
+      exec:
+        command: ["/bin/sh", "-c", "sleep 20"]
+```
+
+<InlineNotification kind="warning">
+
+The `preStop` handler should complete within `terminationGracePeriodSeconds`, which by default is 30 seconds. Otherwise it will not prevent the `TERM` signal being sent to the DataPower container. Thus it is not recommended to exceed `sleep 30`. See the Kubernetes documentation on [termination of Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) for a deeper understanding of this lifecycle.
+
+</InlineNotification>
 
 # Status
 

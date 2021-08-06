@@ -26,12 +26,12 @@ const SecondLeftText = () => <p>Further reading</p>;
 
 const SecondRightText = () => (
   <p>
-    If you are looking for the product documentation for IBM DataPower Gateway, check out the Knowledge Center.
+    If you are looking for the product documentation for IBM DataPower Gateways, check out IBM Documentation.
     <a
       className={calloutLink}
-      href="https://www.ibm.com/support/knowledgecenter/SS9H2Y"
+      href="https://www.ibm.com/docs/en/datapower-gateways"
     >
-      Knowledge Center →
+      IBM Documentation →
     </a>
   </p>
 );
