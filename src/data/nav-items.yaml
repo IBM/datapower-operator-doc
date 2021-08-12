@@ -37,8 +37,6 @@
       path: /features/pod-auto-scaling
 - title: Guides
   pages:
-    - title: Migrating from v2018 to v10
-      path: /guides/v2018-v10-migration
     - title: Domain Configuration
       path: /guides/domain-configuration
     - title: Workload Rollbacks
