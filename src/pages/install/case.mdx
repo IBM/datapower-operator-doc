@@ -17,13 +17,17 @@ The [Container Application Software for Enterprises (CASE)](https://github.com/I
 
 ## Prerequisites
 To install the CASE, you must have:
-- Downloaded the [CASE bundle](https://github.com/IBM/cloud-pak/tree/master/repo/case) appropriate for your license.
-- Installed the `cloudctl` [tool](https://github.com/IBM/cloud-pak-cli/releases).
+- Downloaded the [ibm-datapower-operator CASE bundle](https://github.com/IBM/cloud-pak/tree/master/repo/case).
+- Installed the `cloudctl` [tool v3.9.0+](https://github.com/IBM/cloud-pak-cli/releases).
 - An OCP 4.6+ cluster.
 
 ## CASE inventory
 
-The IBM CASE structure has a concept of inventory items. These items are discrete sets of functionality; installing the DataPower Operator, for example. The DataPower Operator CASE has two inventory items: `datapowerOperator` and `kibanaDashboard`. The `datapowerOperator` inventory item contains multiple scripted installation actions to install and uninstall the Operator either with OLM or using standard Kubernetes objects (Deployments). There are additional actions for configuring your cluster to support air-gapped installation of the Operator and DataPower Firmware. The `kibanaDashboard` item simply contains the dashboard json along with instructions for importing it in the README.
+The IBM CASE structure has a concept of inventory items. These items are discrete sets of functionality; installing the DataPower Operator, for example. The DataPower Operator CASE has two primary inventory items: `datapowerOperator` and `kibanaDashboard`.
+
+The `datapowerOperator` inventory item contains multiple scripted installation actions to install and uninstall the Operator either with OLM or using standard Kubernetes objects (Deployments). There are additional actions for configuring your cluster to support air-gapped installation of the Operator and DataPower Firmware. The `kibanaDashboard` item simply contains the dashboard json along with instructions for importing it in the README.
+
+The DataPower Operator CASE also contains a set of DataPower Operand inventory items which allow for the selection of the correct DataPower Operand for your license type during installation.
 
 ## datapowerOperator actions
 
@@ -143,7 +147,22 @@ cloudctl case launch \
 
 Mirror images from a public source repository to an internal target repository.
 
-Run this action to copy all images required by the CASE from their original source registries into your internal registry. All images copied in this way will maintain their namespace/registry path. For example, mirroring `docker.io/ibmcom/datapower:10.0.0.0` to `my-registry.io` will result in the image `my-registry.io/ibmcom/datapower:10.0.0.0`.
+Run this action to copy all images required by the CASE from their original source registries into your internal registry. All images copied in this way will maintain their namespace/registry path. For example, mirroring `docker.io/ibmcom/datapower:10.0.0.0` to `my-registry.io` will result in the image `my-registry.io/ibmcom/datapower:10.0.0.0`.  Must supply the Image Group appropriate for your license.
+
+|`license.use`       |Image Group            |
+|--------------------|-----------------------|
+|`production`        |`ibmdpProd`            |
+|`nonproduction`     |`ibmdpNonprod`         |
+|`developers`        |`ibmdpDeved`           |
+|`developers-limited`|`ibmdpLimited`         |
+
+<InlineNotification>
+
+When deploying within IBM Cloud Pak for Integration, use image group `ibmdpCp4i`.
+
+For more details regarding deployment within IBM Cloud Pak for Integration, see [Cloud Pak for Integration: Instantiating gateway functionality with DataPower](https://www.ibm.com/docs/en/cloud-paks/cp-integration/2021.3?topic=instantiating-gateway-functionality-datapower).
+
+</InlineNotification>
 
 ### Arguments
 ```
@@ -152,6 +171,7 @@ Run this action to copy all images required by the CASE from their original sour
 --fromRegistry           : override the source image registry in the CASE
 --registry               : target container image registry (required)
 --chunks                 : mirror the images in batches with a given size. Default is 100
+--groups                 : comma-separated list of image groups to mirror
 ```
 
 ### Example
@@ -161,9 +181,9 @@ cloudctl case launch \
   --namespace my-namespace \
   --inventory datapowerOperator \
   --action mirror-images \
-  --args "--registry $TARGET_REGISTRY --inputDir /tmp/cases"
+  --args "--registry $TARGET_REGISTRY --inputDir /tmp/cases --groups $IMAGE_GROUP"
 ```
-Where `$TARGET_REGISTRY` is the URL of the internal mirroring image registry.
+Where `$TARGET_REGISTRY` is the URL of the internal mirroring image registry and `$IMAGE_GROUP` is the correct Image Group for your license type.
 
 ## 5. `stop-registry`
 
