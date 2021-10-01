@@ -10,6 +10,14 @@ Release notes for EUS releases.
 
 </PageDescription>
 
+## 1.2.5
+
+- Add support for DataPower firmware version `10.0.1.5`, available in the `10.0-eus` and `10.0-lts` [channels](/apis/datapowerservice/v1beta2#channels).
+- Fix an issue which caused the StatefulSet to perform a rolling update immediately after becoming `Ready`.
+- The `developers-limited` DataPower image is now hosted on IBM Container Registry at `icr.io/integration/datapower/datapower-limited`.
+- New `ibm-datapower-operator` CASE, see [Installation via CASE](/install/case) for details.
+  - The `mirror-images` [action](/install/case#4.-mirror-images) now requires a `--groups` argument to specify which DataPower images to mirror.
+
 ## 1.2.4
 
 Starting with this release, all operator images are published to IBM Container Registry (`icr.io/cpopen`) instead of Dockerhub (`docker.io/ibmcom`).
