@@ -270,7 +270,7 @@ idg[testdomain](config)# dir config:
 
 # Updating Domains
 
-As described above, Domains are comprised of ConfigMaps and Secrets that exist in the k8s cluster. It is expected that over time a Domain configuration will need to be updated, including the `config` and `local` ConfigMaps and Secrets that comprise the `serts` for the Domain. These ConfigMaps and Secrets can be updated in-place in the cluster, and the DataPower Operator will automatically reconcile those changes.
+As described above, Domains are comprised of ConfigMaps and Secrets that exist in the k8s cluster. It is expected that over time a Domain configuration will need to be updated, including the `config` and `local` ConfigMaps and Secrets that comprise the `certs` for the Domain. These ConfigMaps and Secrets can be updated in-place in the cluster, and the DataPower Operator will automatically reconcile those changes.
 
 When an update is detected on a ConfigMap or Secret referenced by a Domain, a rolling update is triggered across the Pods in the StatefulSet. This allows for Domains to be updated without modifying the `DataPowerService` Custom Resource directly.
 

@@ -10,6 +10,28 @@ Release notes for CD releases.
 
 </PageDescription>
 
+## 1.5.0
+
+### Enhancements
+
+- Add support for DataPower firmware version `10.0.4.0`, available in the `10.0-cd` [channel](/apis/datapowerservice/v1beta3#channels).
+- Add Certificate Manager integration for `operator` and `webhook` pods. Note: requires `v1.0` cert-manager. For more info, see [Certificate Manager](/install/prereqs#optional:-certificate-manager).
+- Various improvements to the DataPower Monitor management of gateway-peering configurations to improve upgrade resiliency and overall stability.
+- Add default NetworkPolicies for DataPowerService operand pods.
+  - In vanilla Kubernetes, an `allow-all` Ingress and Egress rule is created.
+  - In OpenShift (OCP), an `allow-all` Ingress is created.
+- Improve validating and mutating (default) webhook behavior by running these webhooks during reconciliation of DataPowerService custom resources.
+- Add container probes to the conversion webhook pod.
+- Various improvements to debug logging for troubleshooting.
+
+### Fixes
+
+- Fix an issue where updating an `extraExe` ConfigMap does not trigger a rolling update of the DataPower StatefulSet.
+- Fix an issue where the DataPowerService controller would attempt to modify an immutable field on the managed StatefulSet.
+- Fix an issue where the DataPowerMonitor controller could leak an updater instance and continue trying to reconcile a CR which no longer exists.
+- Fix an issue relating to the `icp4i-od-store-cred` Secret (used by [odTracing](/apis/datapowerservice/v1beta3#odtracing)) which caused unnecessary rolling updates to the StatefulSet.
+- Fix an issue relating to the defaulting of `imagePullPolicy` which caused unnecessary rolling updates to the StatefulSet.
+
 ## 1.4.3
 
 - Add support for DataPower firmware version `10.0.1.5`, available in the `10.0-lts` [channel](/apis/datapowerservice/v1beta3#channels).

@@ -20,11 +20,32 @@ The Operator Lifecycle Manager (OLM) provides a framework for installing, updati
 
 The DataPower Operator currently supports installation via OLM in OCP clusters running version 4.6 or higher.
 
+### Coexistence
+
+When installing an operator via OLM, you have the option to choose its **Installation Mode**. There are two options:
+
+- All namespaces on the cluster (`AllNamespaces`)
+- A specific namespace on the cluster (`OwnNamespace`)
+
+If installed in `AllNamespaces` mode, the Operator will use a ClusterRole and ClusterRoleBinding and thus have cluster-wide scope to manage DataPower resources across all namespaces. If installed in `OwnNamespace` mode, the operator will use a Role and RoleBinding as its primary access (isolated to the namespace it's installed in), with a limited set of ClusterRole permissions (see [Cluster-scope permissions](/install/prereqs#cluster-scope-permissions)).
+
+<InlineNotification kind="warning">
+
+**Warning:** You should not install the Operator in more than one mode. If `AllNamespaces` is chosen, do not subsequently install a second instance in `OwnNamespace` mode.
+
+</InlineNotification>
+
+<InlineNotification kind="warning">
+
+**Warning:** If installing more than one instance of the Operator in `OwnNamespace` mode across multiple namespaces, they **MUST** be installed using the same channel / version.
+
+</InlineNotification>
+
 ## Installing the CatalogSource
 
 To enable the installation of the DataPower Operator, a `CatalogSource` must be created in the `openshift-marketplace`.
 
-The below YAML snippet can be used to create the `CatalogSource` resource, which references the `ibmcom/datapower-operator-catalog:latest` image from [Dockerhub](https://hub.docker.com/r/ibmcom/datapower-operator-catalog). The use of the `latest` tag here will allow OLM to poll Dockerhub and pull new catalog images when they become available, enabling over-the-air updates.
+The below YAML snippet can be used to create the `CatalogSource` resource, which references the `datapower-operator-catalog` image from IBM Container Registry. The use of the `latest` tag here will allow OLM to poll IBM Container Registry and pull new catalog images when they become available, enabling over-the-air updates.
 
 ```yaml
 apiVersion: operators.coreos.com/v1alpha1
@@ -36,7 +57,7 @@ spec:
   displayName: IBM DataPower Operator
   publisher: IBM
   sourceType: grpc
-  image: ibmcom/datapower-operator-catalog:latest
+  image: icr.io/cpopen/datapower-operator-catalog:latest
   updateStrategy:
     registryPoll:
       interval: 45m
@@ -82,13 +103,6 @@ To install an instance of the DataPower Operator, use the following steps.
 2. Select the **IBM DataPower Gateway** tile. A panel to the right should appear.
 3. Click the **Install** button on the right panel.
 4. Under **Installation Mode** select your desired installation mode.
-
-    <InlineNotification>
-
-    For most use cases, installing in a specific namespace is the preferred mode. If using a specific namespace as the install mode, select the **Installed Namespace** using the dropdown.
-
-    </InlineNotification>
-
 5. Select the desired **Update Channel**.
 6. Select the desired **Approval Strategy**.
 
