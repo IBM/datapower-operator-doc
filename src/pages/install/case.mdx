@@ -32,12 +32,28 @@ The DataPower Operator CASE also contains a set of DataPower Operand inventory i
 ## datapowerOperator actions
 
 Prior to running any actions for `datapowerOperator`, you **must** save the CASE bundle:
+
 ```
 cloudctl case save \
-  --case /path/to/case \
-  --outputdir /tmp/cases
+   --repo $CASE_REPO_PATH \
+   --case $CASE_NAME \
+   --version $CASE_VERSION \
+   --outputdir $OFFLINEDIR
 ```
-The above command will distill the CASE into various artifacts contained in `/tmp/cases` for processing by the actions.
+Where:
+
+- `$CASE_REPO_PATH` is the URL of the CASE repository, i.e. `https://github.com/IBM/cloud-pak/raw/master/repo/case`.
+- `$CASE_NAME` is the name of the CASE, i.e. `ibm-datapower-operator`.
+- `$CASE_VERSION` is the target DataPower Operator version, i.e. `1.5.0`.
+- `$OFFLINEDIR` is the absolute path to the intended output directory.
+
+<InlineNotification>
+
+See [Installing IBM Cloud Pak foundational services in an air-gapped environment](https://www.ibm.com/docs/en/cpfs?topic=ifsoa-installing-cloud-pak-foundational-services-in-air-gapped-environment) for details.
+
+</InlineNotification>
+
+The above command will distill the CASE into various artifacts contained in `$OFFLINEDIR` for processing by the actions.
 
 Available datapowerOperator actions, in the order they would typically be run:
 

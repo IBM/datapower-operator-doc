@@ -13,10 +13,9 @@ Ensure your environment meets the following requirements prior to installing the
   <AnchorLink>Container environment</AnchorLink>
   <AnchorLink>Resource requirements</AnchorLink>
   <AnchorLink>Cluster-scope permissions</AnchorLink>
-  <AnchorLink>Optional: PodSecurityPolicy</AnchorLink>
-  <AnchorLink>Optional: SecurityContextConstraints</AnchorLink>
   <AnchorLink>Optional: Multiple Failure Zones</AnchorLink>
   <AnchorLink>Optional: Vertical Pod Autoscaler</AnchorLink>
+  <AnchorLink>Optional: Certificate Manager</AnchorLink>
 </AnchorLinks>
 
 ## Container environment
@@ -26,7 +25,7 @@ Ensure your environment meets the following requirements prior to installing the
 The DataPower Operator currently supports:
 
 - OpenShift Container Platform (OCP) 4.6+
-- Kubernetes 1.17+
+- Kubernetes 1.19+
 
 ### Worker node configuration
 
@@ -102,81 +101,6 @@ Permissions needed for OCP platform related checks:
   - Resources: `clusterversions`
   - Verbs: `get`
 
-## Optional: PodSecurityPolicy
-
-The DataPower Operator is expected to work as-is with the standard `restricted` PodSecurityPolicy; however, if you wish to leverage a more restrictive policy the following can be used.
-
-```yaml
-apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: ibm-datapower-operator-restricted-psp
-spec:
-  allowPrivilegeEscalation: false
-  forbiddenSysctls:
-    - '*'
-  hostNetwork: false
-  hostPorts: false
-  requiredDropCapabilities:
-    - ALL
-  runAsUser:
-    rule: MustRunAsNonRoot
-  seLinux:
-    rule: RunAsAny
-  volumes:
-    - configMap
-    - emptyDir
-    - projected
-    - secret
-    - downwardAPI
-    - persistentVolumeClaim
-```
-
-## Optional: SecurityContextConstraints
-
-The DataPower Operator is expected to work as-is with the standard `restricted` SecurityContextConstraints; however, if you wish to leverage a more restrictive constraints the following can be used.
-
-<InlineNotification>
-
-**Note:** This is only applicable to OpenShift (OCP) clusters.
-
-</InlineNotification>
-
-```yaml
-kind: SecurityContextConstraints
-apiVersion: v1
-metadata:
-  name: ibm-datapower-operator-scc
-allowHostDirVolumePlugin: false
-allowHostIPC: false
-allowHostNetwork: false
-allowHostPID: false
-allowHostPorts: false
-allowPrivilegeEscalation: false
-allowPrivilegedContainer: false
-allowedCapabilities: null
-apiVersion: security.openshift.io/v1
-defaultAddCapabilities: null
-groups:
-  - system:authenticated
-priority: null
-readOnlyRootFilesystem: false
-requiredDropCapabilities:
-  - ALL
-runAsUser:
-  type: MustRunAsNonRoot
-seLinuxContext:
-  type: RunAsAny
-users: []
-volumes:
-  - configMap
-  - downwardAPI
-  - emptyDir
-  - persistentVolumeClaim
-  - projected
-  - secret
-```
-
 ## Optional: Multiple Failure Zones
 
 The DataPower Operator `Deployment` is designed to pods evenly across multiple Kubernetes zones. To take advantage of this functionality, follow the [prerequisites](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/#prerequisites) for Pod Topology Spread Constraints.
@@ -186,6 +110,10 @@ With `EvenPodsSpread` enabled in the cluster, no more than one DataPower Operato
 ## Optional: Vertical Pod Autoscaler
 
 The DataPower Operator supports [Vertical Pod Autoscaling](/features/pod-auto-scaling) of the DataPowerService operand. If you wish to utilize this functionality, the Vertical Pod Autoscaler must be first installed and configured in your Kubernetes or OpenShift cluster.
+
+## Optional: Certificate Manager
+
+Certificates used by the `operator` and `webhook` pods will be configured to be automatically managed by cert-manager when cert-manager version `v1.0` or later deployment is detected in the cluster during operator installation.
 
 ### Installing on Kubernetes
 
