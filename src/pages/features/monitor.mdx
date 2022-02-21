@@ -78,3 +78,5 @@ When a `DataPowerService` set of Pods are configured to use gateway peering (e.g
 The DataPower Monitor achieves this by responding to pod lifecycle events (e.g., when a DataPower pod is deleted or restarts) by examining the gateway peering status for every active pod. If a pod has "stale peers" (i.e., failed connections to peers that no longer exist), the DataPower Monitor will issue a maintanence command to reset its peering status. This will cause the pod to drop its connections to all of its peers, both active and inactive, at which point the active peers will reestablish their connections to the pod, and thus only connections to active peers will remain.
 
 This process is all necessary because individual gateways do not always have enough information to determine when a peer has been removed permanently, and thus assistance from the Operator is needed.
+
+See [here](/troubleshooting/gateway-peering-monitoring) for troubleshooting known issues when Gateway Peering Monitoring is enabled.

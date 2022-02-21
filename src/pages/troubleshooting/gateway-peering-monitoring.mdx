@@ -1,0 +1,46 @@
+---
+title: Gateway Peering Monitoring
+description: Troubleshooting known issues that can occur when Gateway Peering Monitoring is enabled
+---
+
+<PageDescription>
+
+Troubleshooting known issues that can occur when Gateway Peering Monitoring is enabled. This is typically only applicable in API Connect deployments.
+
+</PageDescription>
+
+DataPower's Gateway Peering functionality provides a datastore among a group of peer gateways for use by other DataPower features, such as the API Connect Gateway Service. The DataPower Operator's Gateway Peering Monitoring functionality ensures Gateway Peering operates smoothly in a highly dynamic environment such as Kubernetes.
+
+While, in most circumstances, the Gateway Peering Monitoring functionality is able to effectively maintain stable peering, there are some scenarios that are known to cause problems. We discuss these scenarios below with tips for mitigation and recovery.
+
+
+## Loss of Quorum preventing Failover
+
+DataPower Gateway Peering operates on a primary-secondary model, in which a leader (i.e., "primary") is elected from among the peers and data is replicated to the secondary instances. When the secondary peers lose contact with the primary, the secondaries will attempt to failover by electing a new primary.
+
+Failover usually occurs if there has been a change to the `DataPowerService`'s pod spec, resulting in the deletion of the DataPower pod acting as the primary peer after which one of the secondary gateways is selected as the new primary; when the replacement pod comes up, it joins the peers as a secondary. This is usually a smooth process with little-to-no impact on the services hosted by the gateways.
+
+Failover is only possible, however, when the remaining instances have _quorum_; that is when greater than half of the known peers are active. In practice, this usuaully means at least 2 of 3 DataPower pods must still be present. If quorum is lost prior to a successful failover, gateway peering will no long function properly.
+
+In general, the DataPower Operator will recognize a loss of quorum among the gateways and will attempt to reestablish quorum by intelligently selecting which gateway should be primary, based on which has been active longest and is thus most likely to have a complete data replica. However there are cases in which quorum cannot be reestablished and will require manual intervention.
+
+To mitigate this scenario, avoid deleting multiple pods at a time. If scaling down, scale 1 at a time with several minutes between scale-downs. Alternatively, advanced DataPower users may wish to manually set a specific gateway as the primary via DataPower CLI.
+
+<!-- 
+  More details about attaching to the CLI?
+    sw apiconnect
+    co
+    gateway-peering-switch-primary <cfg>
+ -->
+
+The most effective way to recover from this is to start with a blank slate. Scale the `DataPowerService` to 0 pods (delete the existing pods if necessary) and delete the DP Operator pod as well. When the replacement DP Operator pod is up and ready, scale the `DataPowerService` to the desired number of pods. Please note that this will result in an API outage which will last until API Manager initiates a dynamic reconfiguration, which may take several minutes.
+
+## Upgrading from API Connect 10.0.2.x to 10.0.3.x
+
+This upgrade path introduces a new gateway peering configuration, which causes incongruent configurations within the gateway cluster during the rolling update. The DP Operator, prior to version 1.5.0, does not properly handle this scenario and may not be able to recover without manual intervention. In the worst case scenario, new pods may never enter a Ready state and are constantly restarted by Kubernetes.
+
+To mitigate this scenario, disable gateway peering monitoring on the `DataPowerMonitor` custom resource prior to beginning the upgrade. Once the upgrade is complete, reenable gateway peering monitoring.
+
+The most effective way to recover from this is to start with a blank slate. Scale the `DataPowerService` to 0 pods (delete the existing pods if necessary) and delete the DP Operator pod as well. When the replacement DP Operator pod is up and ready, scale the `DataPowerService` to the desired number of pods. Please note that this will result in an API outage which will last until API Manager initiates a dynamic reconfiguration, which may take several minutes.
+
+<!-- TODO: Custom gateway peering configurations with peer group mode disabled, prior to DP Operator v1.4.0 -->
