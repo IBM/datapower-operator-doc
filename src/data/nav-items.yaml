@@ -73,6 +73,8 @@
       path: /troubleshooting/pause
     - title: Operator lock
       path: /troubleshooting/operator-lock
+    - title: Gateway Peering Monitoring
+      path: /troubleshooting/gateway-peering-monitoring
 - title: Release Notes
   pages:
     - path: /release-notes/cd
