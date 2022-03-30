@@ -10,6 +10,13 @@ Release notes for CD releases.
 
 </PageDescription>
 
+## 1.5.2
+
+- Add support for DataPower firmware version `10.0.4.0sr1`, available in the `10.0-cd` [channel](/apis/datapowerservice/v1beta3#channels).
+- Add support for DataPower firmware version `10.0.1.6sr1`, available in the `10.0-lts` [channel](/apis/datapowerservice/v1beta3#channels).
+- Fix an issue relating to conversion webhook discovery causing unnecessary queries to the Kubernetes API server.
+- Fix an issue which caused status updates of the `DataPowerService` custom resource to overwrite existing status erroneously.
+
 ## 1.5.1
 
 - Add support for DataPower firmware version `10.0.1.6`, available in the `10.0-lts` [channel](/apis/datapowerservice/v1beta3#channels).

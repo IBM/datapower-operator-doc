@@ -10,6 +10,13 @@ Release notes for EUS releases.
 
 </PageDescription>
 
+## 1.2.8
+
+- Add support for DataPower firmware version `10.0.1.6sr1`, available in the `10.0-eus` and `10.0-lts` [channels](/apis/datapowerservice/v1beta2#channels).
+- Fix an issue relating to conversion webhook discovery causing unnecessary queries to the Kubernetes API server.
+- Fix an issue which caused status updates of the `DataPowerService` custom resource to overwrite existing status erroneously.
+- Fix an issue relating to how the operator registers its custom resources for serving metrics.
+
 ## 1.2.7
 
 - Add support for DataPower firmware version `10.0.1.6`, available in the `10.0-eus` and `10.0-lts` [channels](/apis/datapowerservice/v1beta2#channels).
