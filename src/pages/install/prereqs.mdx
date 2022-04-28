@@ -111,10 +111,6 @@ With `EvenPodsSpread` enabled in the cluster, no more than one DataPower Operato
 
 The DataPower Operator supports [Vertical Pod Autoscaling](/features/pod-auto-scaling) of the DataPowerService operand. If you wish to utilize this functionality, the Vertical Pod Autoscaler must be first installed and configured in your Kubernetes or OpenShift cluster.
 
-## Optional: Certificate Manager
-
-Certificates used by the `operator` and `webhook` pods will be configured to be automatically managed by cert-manager when cert-manager version `v1.0` or later deployment is detected in the cluster during operator installation.
-
 ### Installing on Kubernetes
 
 For traditional Kubernetes clusters, reference the Kubernetes [documentation](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler#installation) for installation.
@@ -171,3 +167,7 @@ Depending on whether you are installing on normal Kubernetes or OpenShift (OCP),
       name: datapower-operator-vpa-recommender
       apiGroup: rbac.authorization.k8s.io
     ```
+
+## Optional: Certificate Manager
+
+Certificates used by the `operator` and `webhook` pods will be configured to be automatically managed by cert-manager when cert-manager version `v1.0` or later deployment is detected in the cluster during operator installation.

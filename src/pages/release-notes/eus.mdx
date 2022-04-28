@@ -10,6 +10,12 @@ Release notes for EUS releases.
 
 </PageDescription>
 
+## 1.2.9
+
+- Add support for DataPower firmware version `10.0.1.7`, available in the `10.0-eus` and `10.0-lts` [channels](/apis/datapowerservice/v1beta2#channels).
+- Fix an issue preventing DataPower pods from scheduling on Kubernetes when running under the `restricted` PodSecurityPolicy.
+- Fix an issue in the conversion webhook management which caused errors when more than one namespace-scope operator was installed on a cluster.
+
 ## 1.2.8
 
 - Add support for DataPower firmware version `10.0.1.6sr1`, available in the `10.0-eus` and `10.0-lts` [channels](/apis/datapowerservice/v1beta2#channels).

@@ -6,7 +6,7 @@ import { Link } from 'gatsby'
 
 import Carbon from '../../images/carbon.jpg';
 
-const FirstLeftText = () => <p>Version 1.5.2</p>;
+const FirstLeftText = () => <p>Version 1.5.3</p>;
 
 const FirstRightText = () => (
   <p>
