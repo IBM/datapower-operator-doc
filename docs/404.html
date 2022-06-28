@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Error 404 :(</title>
+
+    <script>
+        window.onload = function () {
+            const oldUrl = "ibm.github.io/datapower-operator-doc"
+            const newUrl = "https://www.ibm.com/docs/en/datapower-operator"
+            if (window.location.href.includes(oldUrl)) {
+                document.getElementById("body").innerHTML = "IBM DataPower Operator Documentation has moved to IBM Docs!<br/><br/>Redirecting to " + newUrl + " ...";
+                window.location.href = newUrl;
+            }
+        }
+    </script>
+</head>
+
+<body id="body" style="text-align: center">
+    Page not found
+</body>
+
+</html>
